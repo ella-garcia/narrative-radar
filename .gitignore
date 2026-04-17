@@ -1,0 +1,53 @@
+# --- Python ---------------------------------------------------------------
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# --- Node / frontend ------------------------------------------------------
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Local data — keep schemas + seeds, ignore generated state -----------
+backend/data/processed_videos.json
+backend/data/audit_log.jsonl
+backend/data/cache/
+backend/data/*.parquet
+
+# --- Secrets --------------------------------------------------------------
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# --- OS / editor ----------------------------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+
+# Keep shared VSCode/Cursor config but allow individual user overrides
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+
+# --- Build / temp ---------------------------------------------------------
+*.log
+*.tmp
+.cache/

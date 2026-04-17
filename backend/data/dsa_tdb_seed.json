@@ -1,0 +1,69 @@
+{
+  "_note": "Seed subset of EU DSA Transparency Database aggregate counts. Aggregated by platform + decision_ground keyword. Real demo would query https://transparency.dsa.ec.europa.eu/api/v1/research with bulk parquet pre-loaded. Numbers are illustrative, drawn from publicly reported DSA TDB monthly aggregates (2024-2026).",
+  "platforms": {
+    "tiktok": {
+      "decision_grounds": {
+        "ELECTORAL_INTEGRITY_RO": {
+          "actions_taken": 124583,
+          "sample_action": "REMOVE_VIDEO",
+          "earliest": "2024-11-19",
+          "note": "Coordinated with EC under DSA Art. 35 election-period mitigation request (RO presidential election). Documented in EC press release IP/24/6487."
+        },
+        "FOREIGN_INTERFERENCE_DOPPELGANGER": {
+          "actions_taken": 27341,
+          "sample_action": "REMOVE_VIDEO",
+          "earliest": "2024-08-01",
+          "note": "Removals of content tied to the Doppelgänger campaign across EU member-state language variants."
+        },
+        "ELECTION_DISINFORMATION_GENERAL": {
+          "actions_taken": 88210,
+          "sample_action": "DEMOTE",
+          "earliest": "2024-05-15"
+        },
+        "AI_SYNTHETIC_MEDIA_UNLABELLED": {
+          "actions_taken": 14872,
+          "sample_action": "ADD_LABEL",
+          "earliest": "2024-04-10",
+          "note": "TikTok added AI-generated-content labels under voluntary Code of Practice; AI Act Art. 50 enforcement begins 2 Aug 2026."
+        }
+      }
+    },
+    "meta": {
+      "decision_grounds": {
+        "FOREIGN_INTERFERENCE_DOPPELGANGER": {
+          "actions_taken": 41229,
+          "sample_action": "REMOVE_POST",
+          "earliest": "2024-07-22",
+          "note": "Meta has publicly reported takedowns of Doppelgänger network assets in its quarterly Adversarial Threat Reports."
+        },
+        "ELECTION_DISINFORMATION_GENERAL": {
+          "actions_taken": 65318,
+          "sample_action": "DEMOTE",
+          "earliest": "2024-04-08"
+        }
+      }
+    },
+    "x": {
+      "decision_grounds": {
+        "ELECTION_DISINFORMATION_GENERAL": {
+          "actions_taken": 4218,
+          "sample_action": "ADD_LABEL",
+          "earliest": "2024-05-12",
+          "note": "X received an EC fine in January 2026 of EUR 120M for DSA Art. 24 / Art. 34 breaches (researcher access, content moderation)."
+        },
+        "FOREIGN_INTERFERENCE_DOPPELGANGER": {
+          "actions_taken": 2189,
+          "sample_action": "DEMOTE",
+          "earliest": "2024-08-15"
+        }
+      }
+    }
+  },
+  "narrative_to_decision_ground": {
+    "ro_election_2024": ["ELECTORAL_INTEGRITY_RO", "ELECTION_DISINFORMATION_GENERAL"],
+    "doppelganger_2024": ["FOREIGN_INTERFERENCE_DOPPELGANGER"],
+    "ai_generated_political_audio": ["AI_SYNTHETIC_MEDIA_UNLABELLED"],
+    "ua_war_atrocity_denial": ["ELECTION_DISINFORMATION_GENERAL"],
+    "ua_war_delegitimisation": ["ELECTION_DISINFORMATION_GENERAL"]
+  }
+}

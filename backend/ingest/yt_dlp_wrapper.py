@@ -1,0 +1,114 @@
+"""yt-dlp metadata + media ingestion. Falls back to a pre-cached demo dataset
+when yt-dlp is not installed or the URL matches a demo case."""
+
+from __future__ import annotations
+
+import json
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
+from ..models import Platform, VideoMetadata
+
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+
+
+def _load_demo() -> list[dict[str, Any]]:
+    with (DATA_DIR / "demo_videos.json").open() as f:
+        return json.load(f)
+
+
+DEMO_VIDEOS = _load_demo()
+DEMO_BY_URL = {v["url"]: v for v in DEMO_VIDEOS}
+DEMO_BY_ID = {v["video_id"]: v for v in DEMO_VIDEOS}
+
+
+def _platform_from_url(url: str) -> Platform:
+    u = url.lower()
+    if "tiktok.com" in u:
+        return Platform.tiktok
+    if "youtube.com/shorts" in u or "/shorts/" in u:
+        return Platform.youtube_shorts
+    if "youtube.com" in u or "youtu.be" in u:
+        return Platform.youtube
+    if "instagram.com" in u:
+        return Platform.instagram
+    if "twitter.com" in u or "x.com" in u:
+        return Platform.twitter
+    return Platform.other
+
+
+def fetch_metadata(url: str) -> VideoMetadata:
+    """Return platform metadata for a URL.
+
+    Resolution order:
+      1. Pre-cached demo case → returned synchronously, no network.
+      2. yt-dlp with `skip_download=True` → real metadata.
+      3. ImportError fallback → minimal stub indicating live ingestion is
+         unavailable in this deployment (still permits the rest of the
+         pipeline to run on uploader-supplied transcripts).
+    """
+    if url in DEMO_BY_URL:
+        return _demo_to_metadata(DEMO_BY_URL[url])
+
+    try:
+        import yt_dlp  # type: ignore[import-not-found]
+    except ImportError:
+        # Soft fail — caller decides whether to error.
+        raise RuntimeError(
+            "yt-dlp not installed and URL not in demo cache. "
+            "Install yt-dlp or add the URL to backend/data/demo_videos.json."
+        )
+
+    with yt_dlp.YoutubeDL({"skip_download": True, "quiet": True}) as ydl:
+        info = ydl.extract_info(url, download=False)
+    return _ytdlp_to_metadata(url, info)
+
+
+def _demo_to_metadata(d: dict[str, Any]) -> VideoMetadata:
+    return VideoMetadata(
+        video_id=d["video_id"],
+        url=d["url"],
+        platform=Platform(d["platform"]),
+        title=d["title"],
+        author=d["author"],
+        upload_date=datetime.fromisoformat(d["upload_date"].replace("Z", "+00:00")),
+        view_count=d["view_count"],
+        like_count=d.get("like_count"),
+        duration_sec=d.get("duration_sec"),
+        hashtags=d.get("hashtags", []),
+        language=d["language"],
+        has_platform_ai_label=d.get("has_platform_ai_label", False),
+        description=d.get("description", ""),
+    )
+
+
+def _ytdlp_to_metadata(url: str, info: dict[str, Any]) -> VideoMetadata:
+    upload_str = info.get("upload_date") or info.get("release_date")
+    upload = (
+        datetime.strptime(upload_str, "%Y%m%d") if upload_str else datetime.utcnow()
+    )
+    tags = info.get("tags") or []
+    return VideoMetadata(
+        video_id=str(info.get("id") or url),
+        url=url,
+        platform=_platform_from_url(url),
+        title=info.get("title") or "(no title)",
+        author=info.get("uploader") or info.get("channel") or "(unknown)",
+        upload_date=upload,
+        view_count=int(info.get("view_count") or 0),
+        like_count=int(info.get("like_count")) if info.get("like_count") else None,
+        duration_sec=float(info.get("duration") or 0) or None,
+        hashtags=[f"#{t}" for t in tags if isinstance(t, str)],
+        language=(info.get("language") or "en")[:2],
+        has_platform_ai_label=bool(info.get("ai_generated") or False),
+        description=info.get("description") or "",
+    )
+
+
+def find_demo_by_id(video_id: str) -> dict[str, Any] | None:
+    return DEMO_BY_ID.get(video_id)
+
+
+def all_demo_videos() -> list[dict[str, Any]]:
+    return list(DEMO_VIDEOS)

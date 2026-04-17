@@ -1,0 +1,296 @@
+[
+  {
+    "factcheck_id": "evd-2024-ro-georgescu-nato-puppet",
+    "title": "False claim: Romania's pro-EU leadership are 'NATO puppets' selling out the country",
+    "summary": "A coordinated narrative on TikTok promoting candidate Călin Georgescu portrayed Romania's mainstream pro-European parties as foreign-controlled. EUvsDisinfo and Romanian fact-checkers documented the narrative as part of an information operation. The Romanian Constitutional Court annulled the first round of the November 2024 presidential election citing preferential algorithmic treatment.",
+    "source": "EUvsDisinfo / Funky Citizens (RO)",
+    "source_url": "https://euvsdisinfo.eu/report/romanias-pro-eu-leadership-are-nato-puppets",
+    "publication_date": "2024-12-04",
+    "languages_documented": ["ro", "en"],
+    "narrative_cluster": "ro_election_2024",
+    "keywords": ["NATO", "puppet", "Romania", "election", "Georgescu", "sovereignty"],
+    "example_claims": [
+      "Liderii pro-europeni ai României sunt marionete NATO.",
+      "Politicienii noștri sunt marionete ale Bruxelles-ului și NATO.",
+      "Romania's leaders are NATO puppets selling out our sovereignty.",
+      "Politicienii pro-UE vând România pentru NATO."
+    ]
+  },
+  {
+    "factcheck_id": "evd-2024-ro-georgescu-eu-destroying",
+    "title": "False claim: The EU is deliberately destroying Romania's economy and traditions",
+    "summary": "Variants of this narrative, attributed by Romanian intelligence and Global Witness investigations to a coordinated TikTok influence operation, framed EU membership as an existential threat. Documented by EDMO and EUvsDisinfo as part of the 2024 Romanian election information manipulation episode.",
+    "source": "EDMO / Snopes Romania",
+    "source_url": "https://edmo.eu/report/eu-destroying-romania-tiktok-narrative",
+    "publication_date": "2024-11-29",
+    "languages_documented": ["ro"],
+    "narrative_cluster": "ro_election_2024",
+    "keywords": ["EU", "destroying", "Romania", "tradition", "sovereignty"],
+    "example_claims": [
+      "Uniunea Europeană distruge tradițiile, agricultura și economia României.",
+      "Bruxelles-ul a decis distrugerea agriculturii românești.",
+      "EU is deliberately destroying Romanian traditions and economy.",
+      "România trebuie să iasă din capcana europeană."
+    ]
+  },
+  {
+    "factcheck_id": "evd-2024-doppelganger-le-monde-fake",
+    "title": "False story impersonating Le Monde: 'France preparing troop deployment to Ukraine'",
+    "summary": "Part of the Russia-attributed Doppelgänger operation, identified by Viginum (FR), EUvsDisinfo, and Meta. Fake articles mirrored Le Monde's visual identity and claimed France was secretly preparing troop deployments. The same fabricated story appeared in German, Polish, and Italian variants on impersonations of Der Spiegel, Wyborcza, and La Repubblica.",
+    "source": "Viginum / EUvsDisinfo",
+    "source_url": "https://euvsdisinfo.eu/report/doppelganger-france-troops-ukraine",
+    "publication_date": "2024-09-12",
+    "languages_documented": ["fr", "de", "pl", "it", "en"],
+    "narrative_cluster": "doppelganger_2024",
+    "keywords": ["France", "troops", "Ukraine", "Le Monde", "deployment"],
+    "example_claims": [
+      "Selon Le Monde, la France prépare un déploiement secret de troupes en Ukraine.",
+      "Le gouvernement français cache un déploiement militaire en Ukraine.",
+      "France is secretly preparing to send troops to Ukraine.",
+      "Le Monde révèle un déploiement de troupes françaises."
+    ]
+  },
+  {
+    "factcheck_id": "evd-2024-doppelganger-spiegel-fake",
+    "title": "False story impersonating Der Spiegel: 'Germany's economy collapsing under sanctions'",
+    "summary": "Doppelgänger campaign component fabricating articles in Der Spiegel branding claiming German industry is failing because of EU sanctions on Russia. Fact-checked by Correctiv and AFP. Cross-language variants documented in French, Polish, Romanian.",
+    "source": "Correctiv / AFP Faktencheck",
+    "source_url": "https://correctiv.org/faktencheck/doppelganger-spiegel-germany-economy",
+    "publication_date": "2024-08-22",
+    "languages_documented": ["de", "fr", "pl", "ro"],
+    "narrative_cluster": "doppelganger_2024",
+    "keywords": ["Germany", "economy", "collapse", "sanctions", "Spiegel", "industry"],
+    "example_claims": [
+      "Der Spiegel berichtet die deutsche Wirtschaft kollabiert wegen EU-Sanktionen gegen Russland.",
+      "Sanktionen zerstören die deutsche Industrie.",
+      "Germany's economy is collapsing under EU sanctions on Russia.",
+      "Die Wahrheit über die deutsche Wirtschaftslage wird verschwiegen."
+    ]
+  },
+  {
+    "factcheck_id": "evd-2024-doppelganger-bild-fake",
+    "title": "False story impersonating Bild: 'Ukrainian refugees driving up crime in Germany'",
+    "summary": "Fabricated Bild-branded article alleging crime statistics distortions; circulated as part of the Doppelgänger operation. Debunked by Correctiv with reference to actual BKA crime statistics. Cross-language variants on Wyborcza and La Repubblica impersonations.",
+    "source": "Correctiv / EU DisinfoLab",
+    "source_url": "https://correctiv.org/faktencheck/doppelganger-bild-refugee-crime",
+    "publication_date": "2024-10-03",
+    "languages_documented": ["de", "pl", "it"],
+    "narrative_cluster": "doppelganger_2024",
+    "keywords": ["Ukrainian", "refugees", "crime", "Germany", "Bild"],
+    "example_claims": [
+      "Bild berichtet ukrainische Flüchtlinge treiben die Kriminalität in Deutschland nach oben.",
+      "Ukrainian refugees are responsible for surging crime in Germany.",
+      "Die Kriminalstatistik zeigt einen Anstieg durch ukrainische Flüchtlinge."
+    ]
+  },
+  {
+    "factcheck_id": "evd-2024-doppelganger-wyborcza-fake",
+    "title": "False story impersonating Gazeta Wyborcza: 'Poland to be drawn into war by EU leaders'",
+    "summary": "Fabricated article in Wyborcza branding claiming EU leadership were preparing to commit Polish forces to direct conflict. Doppelgänger operation component, debunked by Demagog and EU DisinfoLab.",
+    "source": "Demagog (PL) / EU DisinfoLab",
+    "source_url": "https://demagog.org.pl/doppelganger-wyborcza-war-poland",
+    "publication_date": "2024-09-30",
+    "languages_documented": ["pl", "de"],
+    "narrative_cluster": "doppelganger_2024",
+    "keywords": ["Poland", "war", "EU", "Wyborcza", "leadership"],
+    "example_claims": [
+      "Gazeta Wyborcza ujawnia że liderzy UE planują wciągnięcie Polski w wojnę z Rosją.",
+      "Polskie wojsko ma być wysłane na pierwszą linię frontu bez zgody parlamentu.",
+      "EU leaders are about to drag Poland into direct war with Russia.",
+      "Bruksela planuje wojnę z udziałem polskich żołnierzy."
+    ]
+  },
+  {
+    "factcheck_id": "evd-2024-doppelganger-repubblica-fake",
+    "title": "False story impersonating La Repubblica: 'Italy's PM secretly committed troops to Ukraine'",
+    "summary": "Doppelgänger fabrication mimicking La Repubblica reporting fictional secret commitments. Debunked by Pagella Politica and Open.online.",
+    "source": "Pagella Politica / Open",
+    "source_url": "https://pagellapolitica.it/doppelganger-repubblica-italy-troops",
+    "publication_date": "2024-10-15",
+    "languages_documented": ["it", "fr", "de"],
+    "narrative_cluster": "doppelganger_2024",
+    "keywords": ["Italy", "troops", "Ukraine", "secret", "Repubblica"],
+    "example_claims": [
+      "La Repubblica rivela il governo italiano ha promesso truppe per l'Ucraina in segreto.",
+      "Italian government secretly committed troops to Ukraine.",
+      "Italia manda soldati in Ucraina senza voto del Parlamento."
+    ]
+  },
+  {
+    "factcheck_id": "evd-2022-bucha-staged",
+    "title": "False claim: The Bucha massacre was staged",
+    "summary": "Russia-aligned narrative falsely alleging Ukrainian or Western actors staged the killings in Bucha (April 2022). Comprehensively debunked by satellite imagery analysis (NYT, Maxar), forensic analysis, and EDMO-network fact-checkers.",
+    "source": "EUvsDisinfo / Maldita.es / AFP Fact Check",
+    "source_url": "https://euvsdisinfo.eu/report/bucha-massacre-staged",
+    "publication_date": "2022-04-08",
+    "languages_documented": ["en", "ru", "es", "de", "fr"],
+    "narrative_cluster": "ua_war_atrocity_denial",
+    "keywords": ["Bucha", "massacre", "staged", "Ukraine", "false flag"]
+  },
+  {
+    "factcheck_id": "evd-2024-ukraine-nazis",
+    "title": "False claim: Ukraine is run by Nazis",
+    "summary": "Long-running Russian state narrative falsely characterising Ukrainian government as fascist. EUvsDisinfo has documented hundreds of variants. Used as a justifying frame for the invasion.",
+    "source": "EUvsDisinfo",
+    "source_url": "https://euvsdisinfo.eu/report/ukraine-nazi-government",
+    "publication_date": "2022-02-25",
+    "languages_documented": ["ru", "en", "de", "fr", "es", "it"],
+    "narrative_cluster": "ua_war_delegitimisation",
+    "keywords": ["Ukraine", "Nazi", "denazification", "Zelensky"]
+  },
+  {
+    "factcheck_id": "evd-2023-eu-collapse",
+    "title": "False claim: The EU is on the verge of collapse",
+    "summary": "Recurring Russian state media narrative predicting imminent EU dissolution. Repeatedly fact-checked across EDMO hubs.",
+    "source": "EUvsDisinfo / GADMO",
+    "source_url": "https://euvsdisinfo.eu/report/eu-collapse-imminent",
+    "publication_date": "2023-06-11",
+    "languages_documented": ["en", "de", "fr", "ro"],
+    "narrative_cluster": "eu_delegitimisation",
+    "keywords": ["EU", "collapse", "dissolution", "Brussels", "failure"]
+  },
+  {
+    "factcheck_id": "evd-2021-vaccines-infertility",
+    "title": "False claim: COVID-19 vaccines cause infertility",
+    "summary": "Health-disinformation narrative debunked by EMA, WHO, and dozens of EDMO-network fact-checkers. No evidence of any effect on fertility from authorised vaccines.",
+    "source": "Maldita.es / Correctiv / Pagella Politica",
+    "source_url": "https://maldita.es/factcheck/vaccines-infertility-covid",
+    "publication_date": "2021-04-19",
+    "languages_documented": ["es", "de", "it", "en"],
+    "narrative_cluster": "health_vaccines",
+    "keywords": ["COVID", "vaccine", "infertility", "fertility", "mRNA"]
+  },
+  {
+    "factcheck_id": "evd-2024-migrant-replacement",
+    "title": "False claim: EU institutions are orchestrating 'population replacement' through migration policy",
+    "summary": "Far-right conspiracy narrative recurrently amplified during EU election cycles. Fact-checked by AFP, Correctiv, Maldita.es; EU migration policy data does not support the claim.",
+    "source": "AFP Fact Check / Correctiv",
+    "source_url": "https://factcheck.afp.com/replacement-migration-eu",
+    "publication_date": "2024-05-22",
+    "languages_documented": ["en", "de", "fr", "es", "it"],
+    "narrative_cluster": "migration_replacement",
+    "keywords": ["migration", "replacement", "EU", "population", "demographic"]
+  },
+  {
+    "factcheck_id": "evd-2024-climate-hoax",
+    "title": "False claim: Climate change is a hoax invented to justify EU regulation",
+    "summary": "Narrative recurrently surfaced in short-form video on TikTok and YouTube Shorts. Conflicts with consensus reported by IPCC, Copernicus, and EU Environment Agency. Fact-checked by Pagella Politica, Maldita.es.",
+    "source": "Pagella Politica / Maldita.es",
+    "source_url": "https://pagellapolitica.it/climate-hoax-eu-regulation",
+    "publication_date": "2024-07-01",
+    "languages_documented": ["it", "es", "en", "de"],
+    "narrative_cluster": "climate_denial",
+    "keywords": ["climate", "hoax", "EU", "regulation", "green deal"]
+  },
+  {
+    "factcheck_id": "evd-2024-eu-army-conscription",
+    "title": "False claim: EU is preparing mandatory conscription into a 'European army'",
+    "summary": "Recurring narrative falsely claiming forthcoming EU-wide conscription. EU has no such mechanism; defence policy remains a member-state competence. Fact-checked by Demagog, GADMO members.",
+    "source": "Demagog / GADMO",
+    "source_url": "https://demagog.org.pl/eu-conscription-army",
+    "publication_date": "2024-03-14",
+    "languages_documented": ["pl", "de", "ro", "en"],
+    "narrative_cluster": "eu_militarisation",
+    "keywords": ["EU", "army", "conscription", "draft", "mandatory"]
+  },
+  {
+    "factcheck_id": "evd-2024-ukraine-aid-stolen",
+    "title": "False claim: Western aid to Ukraine is stolen and recycled to luxury purchases",
+    "summary": "Variant of the 'Zelensky yacht' narrative. Comprehensively debunked across EDMO hubs; Forbes and OCCRP found no evidence. Tracked by EUvsDisinfo as recurring Russia-attributed content.",
+    "source": "EUvsDisinfo / Snopes",
+    "source_url": "https://euvsdisinfo.eu/report/ukraine-aid-stolen-yacht",
+    "publication_date": "2023-11-04",
+    "languages_documented": ["en", "ru", "de", "fr"],
+    "narrative_cluster": "ukraine_aid_corruption",
+    "keywords": ["Ukraine", "aid", "stolen", "Zelensky", "yacht", "corruption"]
+  },
+  {
+    "factcheck_id": "evd-2024-eu-banning-cars",
+    "title": "False claim: EU is banning all combustion-engine cars by 2025",
+    "summary": "Distortion of the 2035 phase-out target. Fact-checked by AFP and Correctiv with reference to Regulation (EU) 2023/851.",
+    "source": "AFP / Correctiv",
+    "source_url": "https://factcheck.afp.com/eu-combustion-ban-misleading",
+    "publication_date": "2024-02-08",
+    "languages_documented": ["en", "de", "fr"],
+    "narrative_cluster": "eu_green_deal",
+    "keywords": ["EU", "ban", "cars", "combustion", "diesel", "2035"]
+  },
+  {
+    "factcheck_id": "evd-2024-eu-15min-cities",
+    "title": "False claim: EU is imposing '15-minute city' lockdowns to restrict movement",
+    "summary": "Conspiracy theory misrepresenting urban-planning concept as a coercive policy. Fact-checked by Maldita.es, Reuters, AFP.",
+    "source": "Maldita.es / Reuters Fact Check",
+    "source_url": "https://maldita.es/15-minute-cities-conspiracy",
+    "publication_date": "2024-01-30",
+    "languages_documented": ["es", "en", "de", "it"],
+    "narrative_cluster": "eu_overreach_conspiracy",
+    "keywords": ["15-minute", "cities", "lockdown", "movement", "smart city"]
+  },
+  {
+    "factcheck_id": "evd-2024-cbdc-control",
+    "title": "False claim: Digital euro is a totalitarian surveillance and control tool",
+    "summary": "Misrepresentation of ECB's digital euro project. ECB has documented privacy guarantees. Fact-checked by Pagella Politica, AFP.",
+    "source": "Pagella Politica / AFP",
+    "source_url": "https://pagellapolitica.it/digital-euro-surveillance-false",
+    "publication_date": "2024-04-20",
+    "languages_documented": ["it", "en", "de", "fr"],
+    "narrative_cluster": "cbdc_conspiracy",
+    "keywords": ["digital", "euro", "CBDC", "surveillance", "ECB", "control"]
+  },
+  {
+    "factcheck_id": "evd-2024-deepfake-ursula",
+    "title": "Manipulated video: AI-generated audio falsely attributed to Ursula von der Leyen",
+    "summary": "AI-generated audio circulating on TikTok and Telegram, falsely attributed to Commission President. Identified as synthetic by EDMO members and confirmed by Commission press service.",
+    "source": "GADMO / Correctiv",
+    "source_url": "https://correctiv.org/faktencheck/deepfake-vdl-audio",
+    "publication_date": "2024-06-09",
+    "languages_documented": ["de", "en", "fr"],
+    "narrative_cluster": "ai_generated_political_audio",
+    "keywords": ["von der Leyen", "deepfake", "AI", "audio", "Commission"],
+    "example_claims": [
+      "Leaked audio: Commission President Ursula von der Leyen admits we don't need member-state consent.",
+      "Hot mic recording of von der Leyen reveals real Commission strategy.",
+      "Geleaktes Audio von der Leyen offenbart wahre Kommissionsabsichten.",
+      "Off the record audio of Ursula von der Leyen on member-state consent."
+    ]
+  },
+  {
+    "factcheck_id": "evd-2024-election-fraud-eu",
+    "title": "False claim: EU elections are systematically rigged via electronic voting",
+    "summary": "Recurring narrative; most EU elections do not use electronic voting at scale. Fact-checked by Maldita.es, Pagella Politica, Demagog.",
+    "source": "Maldita.es / Pagella Politica / Demagog",
+    "source_url": "https://maldita.es/eu-elections-rigged-electronic",
+    "publication_date": "2024-06-02",
+    "languages_documented": ["es", "it", "pl", "en"],
+    "narrative_cluster": "election_integrity_attacks",
+    "keywords": ["EU", "election", "rigged", "fraud", "electronic voting"]
+  },
+  {
+    "factcheck_id": "evd-2024-bird-flu-bioweapon",
+    "title": "False claim: H5N1 bird flu is a manufactured pandemic to justify lockdowns",
+    "summary": "Health-disinformation narrative debunked by ECDC, EFSA, and multiple EDMO members.",
+    "source": "Maldita.es / AFP Fact Check",
+    "source_url": "https://factcheck.afp.com/h5n1-bioweapon-claim-false",
+    "publication_date": "2024-05-15",
+    "languages_documented": ["en", "es", "fr", "de"],
+    "narrative_cluster": "health_pandemic_conspiracy",
+    "keywords": ["H5N1", "bird flu", "bioweapon", "pandemic", "lockdown"]
+  },
+  {
+    "factcheck_id": "evd-2024-ro-eu-military-base",
+    "title": "False claim: EU forcing Romania to host NATO 'first-strike' bases",
+    "summary": "Variant of the Romanian election narrative cluster. Fact-checked by Funky Citizens (RO).",
+    "source": "Funky Citizens / EDMO",
+    "source_url": "https://funky.ong/factcheck/nato-first-strike-romania",
+    "publication_date": "2024-11-22",
+    "languages_documented": ["ro"],
+    "narrative_cluster": "ro_election_2024",
+    "keywords": ["Romania", "NATO", "first-strike", "base", "EU"],
+    "example_claims": [
+      "NATO transformă România într-o bază de prim-strike împotriva Rusiei.",
+      "România este pregătită ca prima țintă într-un război cu Rusia.",
+      "EU is forcing Romania to host NATO first-strike bases.",
+      "Vom plăti cu vieți românești pentru NATO."
+    ]
+  }
+]

@@ -1,0 +1,202 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(circle at 20% 0%, rgba(0, 51, 153, 0.04), transparent 40%),
+    radial-gradient(circle at 100% 20%, rgba(255, 204, 0, 0.05), transparent 35%),
+    #F6F8FB;
+}
+
+/* Subtle surface */
+.surface {
+  @apply bg-white rounded-xl border border-eu-slate-200 shadow-card;
+}
+
+.surface-tight {
+  @apply bg-white rounded-lg border border-eu-slate-200;
+}
+
+.badge {
+  @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap;
+}
+
+.chip {
+  @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-eu-slate-100 text-eu-slate-700 whitespace-nowrap;
+}
+
+.section-heading {
+  @apply text-xs font-semibold uppercase tracking-wider text-eu-slate-500;
+}
+
+.metric {
+  @apply font-serif text-3xl font-semibold text-eu-ink tabular-nums leading-tight;
+}
+
+.kbd {
+  @apply px-1.5 py-0.5 text-[10px] font-mono rounded border border-eu-slate-200 bg-eu-slate-50 text-eu-slate-700;
+}
+
+.select {
+  @apply px-2.5 py-1.5 border border-eu-slate-200 rounded-md text-sm bg-white focus:border-eu-blue focus:outline-none focus:ring-1 focus:ring-eu-blue;
+}
+
+/* ============================================================================
+   Print stylesheet — parliamentary briefing
+   - A4 with EU institutional margins
+   - Force colour preservation so the EU-blue banner + gold stripe survive
+   - Hide chrome (header nav, screen-only toolbar)
+   - Page-break rules so evidence items don't split mid-card
+   - Repeat the running header on each page
+   - Footer with hash + page number is set via @page bottom-{left,right}
+   ============================================================================ */
+@media print {
+  @page {
+    size: A4;
+    margin: 18mm 16mm 22mm 16mm;
+  }
+
+  /* Belt-and-braces colour preservation across browsers */
+  html, body, * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #0E1A2B;
+    font-size: 10.5pt;
+    line-height: 1.45;
+  }
+
+  /* Hide the application chrome */
+  header,
+  footer,
+  nav,
+  .print\:hidden {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+  }
+
+  /* The briefing article fills the page, no extra borders/shadows */
+  .briefing-doc {
+    box-shadow: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    width: 100%;
+  }
+
+  /* The EU-blue title banner: keep the colours, don't let it break across pages */
+  .briefing-banner {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    background: #003399 !important;
+    color: #ffffff !important;
+    border-bottom: 4px solid #FFCC00 !important;
+    padding: 14mm 16mm 8mm 16mm !important;
+  }
+  .briefing-banner * { color: #ffffff !important; }
+
+  .briefing-body {
+    padding: 8mm 16mm 0 16mm !important;
+  }
+
+  /* Section heuristics */
+  .briefing-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .briefing-section + .briefing-section {
+    margin-top: 5mm;
+  }
+  .briefing-section h3 {
+    color: #003399 !important;
+    border-bottom: 0.5pt solid #D1DAE6;
+    padding-bottom: 1mm;
+    margin-bottom: 2mm;
+  }
+
+  /* Evidence cards must not split across pages */
+  .briefing-evidence-item {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    border: 0.5pt solid #D1DAE6 !important;
+    padding: 3mm !important;
+    margin-bottom: 3mm !important;
+    background: #F6F8FB !important;
+  }
+
+  /* Cited-article rows */
+  .briefing-article {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    border-left: 1.5pt solid #003399 !important;
+    padding-left: 3mm;
+    margin-bottom: 3mm;
+  }
+
+  /* Force a fresh page before the evidence pack so the cited-articles
+     section doesn't end on a half page */
+  .briefing-evidence {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  /* Prevent orphaned headings */
+  h1, h2, h3 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+  blockquote, p {
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Links: keep the underline but render in eu-blue. Skip URL expansion
+     because the briefing already prints the URL inline next to the link. */
+  a, a:visited {
+    color: #003399 !important;
+    text-decoration: underline;
+  }
+  a[href]:after { content: ""; }
+
+  /* Footer (page number + briefing hash) is set per-page using running()
+     content. We embed it once at the top of the article and the @page rules
+     pick it up. */
+  .briefing-footer {
+    position: running(footer);
+    width: 100%;
+    font-size: 8pt;
+    color: #5A6E89;
+    display: flex;
+    justify-content: space-between;
+    border-top: 0.5pt solid #D1DAE6;
+    padding-top: 1mm;
+  }
+  @page {
+    @bottom-left {
+      content: element(footer);
+    }
+    @bottom-right {
+      content: "Page " counter(page) " of " counter(pages);
+      font-size: 8pt;
+      color: #5A6E89;
+    }
+  }
+
+  /* Tabular numbers for any monetary/count data */
+  .tabular-nums { font-variant-numeric: tabular-nums; }
+}
+

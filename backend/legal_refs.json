@@ -1,0 +1,24 @@
+{
+  "DSA Art. 26": {
+    "short": "Coordinated Spread / Recommender Transparency",
+    "instrument": "Regulation (EU) 2022/2065 (Digital Services Act)",
+    "summary": "Very Large Online Platforms must provide meaningful information about the main parameters used in their recommender systems and any options for users to modify or influence those parameters.",
+    "official_url": "https://eur-lex.europa.eu/eli/reg/2022/2065/oj",
+    "indicator_basis": "When the same factual claim is reproduced across multiple accounts in a short window, especially across languages, the platform's recommender behaviour and the absence of mitigation may constitute a transparency failure."
+  },
+  "DSA Art. 34-35": {
+    "short": "Systemic Risk Assessment & Mitigation",
+    "instrument": "Regulation (EU) 2022/2065 (Digital Services Act)",
+    "summary": "VLOPs must identify and mitigate systemic risks stemming from the design and use of their services, including risks to civic discourse, electoral processes, and public security.",
+    "official_url": "https://eur-lex.europa.eu/eli/reg/2022/2065/oj",
+    "indicator_basis": "When high-reach political content semantically matches a fact-check published by an EDMO-affiliated organisation, AND the platform's own DSA Transparency Database filings show it has acted on similar claims elsewhere, the persistence of this content may indicate inadequate mitigation under Art. 35."
+  },
+  "AI Act Art. 50": {
+    "short": "Transparency Obligations for AI-Generated Content",
+    "instrument": "Regulation (EU) 2024/1689 (AI Act)",
+    "summary": "Providers and deployers must ensure that AI-generated or AI-manipulated image, audio, video, or text content is marked as such in a machine-readable format and detectable as artificially generated. Deepfakes and AI-generated text on matters of public interest carry specific labelling duties.",
+    "official_url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+    "enforcement_date": "2026-08-02",
+    "indicator_basis": "When a video carries reasonable indicators of AI involvement (uploader-declared in the description, AI-related hashtags, ClaimReview AI-generated tag, or third-party synthetic-media likelihood at or above the configured threshold) AND the platform has not surfaced the AI Act-mandated disclosure label, this indicates a potential platform-level disclosure failure. Narrative Radar does not itself classify content as AI-generated."
+  }
+}
