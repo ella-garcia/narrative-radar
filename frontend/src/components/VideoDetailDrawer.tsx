@@ -98,7 +98,11 @@ export function VideoDetailDrawer({
             </button>
           </div>
           <div className="mt-3">
-            <SeverityMeter score={liveVideo.severity.score} label={liveVideo.severity.label} />
+            <SeverityMeter
+              score={liveVideo.severity.score}
+              label={liveVideo.severity.label}
+              details={liveVideo.severity}
+            />
           </div>
         </div>
 

@@ -66,6 +66,10 @@ export const api = {
         return fetch(`${BASE}/videos${s ? `?${s}` : ""}`).then((r) => j(r));
     },
     getVideo: (id) => fetch(`${BASE}/videos/${id}`).then((r) => j(r)),
+    approveVideo: (id) => fetch(`${BASE}/videos/${id}/approve`, {
+        method: "POST",
+        headers: authHeaders(),
+    }).then((r) => j(r)),
     dashboard: () => fetch(`${BASE}/dashboard`).then((r) => j(r)),
     briefing: (opts) => fetch(`${BASE}/briefing`, {
         method: "POST",

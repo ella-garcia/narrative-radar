@@ -70,6 +70,14 @@ class TikTokSoundLineageProvider(LineageProvider):
             )
 
         try:
+            from .providers.tikapi_provider import fetch_music_posts
+            return fetch_music_posts(metadata)
+        except Exception:
+            # Fall through to the free unofficial wrapper below. The final
+            # failure state should reflect the last available provider attempt.
+            pass
+
+        try:
             from TikTokApi import TikTokApi  # type: ignore[import-not-found]
         except ImportError:
             return DerivativeSpread(

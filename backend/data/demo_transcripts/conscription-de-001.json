@@ -1,0 +1,28 @@
+{
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 8.4,
+      "speaker": "SPEAKER_00",
+      "text": "Die EU bereitet eine verpflichtende Einberufung fuer eine europaeische Armee vor."
+    },
+    {
+      "start": 8.4,
+      "end": 19.2,
+      "speaker": "SPEAKER_00",
+      "text": "Junge Menschen sollen fuer Bruessels Kriege dienen, obwohl Verteidigung Sache der Staaten ist."
+    },
+    {
+      "start": 19.2,
+      "end": 30.6,
+      "speaker": "SPEAKER_00",
+      "text": "Erst nennen sie es Sicherheit, dann wird daraus eine Wehrpflicht in der EU."
+    },
+    {
+      "start": 30.6,
+      "end": 39.0,
+      "speaker": "SPEAKER_00",
+      "text": "Speichert diesen Beitrag, bevor er zensiert wird."
+    }
+  ]
+}

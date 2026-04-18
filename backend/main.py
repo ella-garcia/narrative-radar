@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import threading
 from collections import Counter
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +21,7 @@ from .models import (
     Briefing,
     BriefingRequest,
     DashboardSummary,
+    HumanReview,
     IngestRequest,
     NarrativeCluster,
 )
@@ -55,6 +57,7 @@ def get_legal_refs() -> dict[str, Any]:
 @app.get("/demo-videos")
 def get_demo_videos() -> list[dict[str, Any]]:
     """Pre-canned demo URLs the front-end exposes as one-click ingestion targets."""
+    demos = all_demo_videos()
     return [
         {
             "video_id": d["video_id"],
@@ -63,9 +66,37 @@ def get_demo_videos() -> list[dict[str, Any]]:
             "title": d["title"],
             "language": d["language"],
             "narrative_hint": d.get("narrative_hint"),
+            "view_count": int(d.get("view_count") or 0),
+            "audio_id": d.get("audio_id"),
+            "derivative_count": _demo_derivative_count(d, demos),
+            "derivative_aggregate_reach": _demo_derivative_aggregate_reach(d, demos),
+            "derivative_languages": _demo_derivative_languages(d, demos),
         }
-        for d in all_demo_videos()
+        for d in demos
     ]
+
+
+def _demo_derivatives(demo: dict[str, Any], demos: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    audio_id = demo.get("audio_id")
+    if not audio_id:
+        return []
+    return [
+        d for d in demos
+        if d.get("audio_id") == audio_id and d.get("video_id") != demo.get("video_id")
+    ]
+
+
+def _demo_derivative_count(demo: dict[str, Any], demos: list[dict[str, Any]]) -> int:
+    return len(_demo_derivatives(demo, demos))
+
+
+def _demo_derivative_aggregate_reach(demo: dict[str, Any], demos: list[dict[str, Any]]) -> int:
+    return sum(int(d.get("view_count") or 0) for d in _demo_derivatives(demo, demos))
+
+
+def _demo_derivative_languages(demo: dict[str, Any], demos: list[dict[str, Any]]) -> list[str]:
+    languages = {str(d.get("language") or "") for d in _demo_derivatives(demo, demos)}
+    return sorted(lang for lang in languages if lang)
 
 
 @app.post("/ingest", response_model=AnalyzedVideo)
@@ -148,6 +179,34 @@ def get_video(video_id: str) -> AnalyzedVideo:
     if not v:
         raise HTTPException(status_code=404, detail=f"video_id={video_id} not found")
     return v
+
+
+@app.post("/videos/{video_id}/approve", response_model=AnalyzedVideo)
+def approve_video(
+    video_id: str,
+    x_actor: str | None = Header(default=None),
+    x_role: str | None = Header(default=None),
+) -> AnalyzedVideo:
+    v = storage.get(video_id)
+    if not v:
+        raise HTTPException(status_code=404, detail=f"video_id={video_id} not found")
+    approved = v.model_copy(
+        update={
+            "human_review": HumanReview(
+                status="approved",
+                approved_by=x_actor or "anonymous",
+                approved_at=datetime.now(tz=timezone.utc),
+            )
+        }
+    )
+    storage.upsert(approved)
+    audit.log(
+        actor=x_actor or "anonymous",
+        role=x_role or "aide",
+        action="video_approved",
+        detail={"video_id": video_id},
+    )
+    return approved
 
 
 @app.get("/dashboard", response_model=DashboardSummary)

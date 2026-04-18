@@ -1,0 +1,28 @@
+{
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 7.8,
+      "speaker": "SPEAKER_00",
+      "text": "Il cambiamento climatico e' una bufala inventata per giustificare nuove regole europee."
+    },
+    {
+      "start": 7.8,
+      "end": 18.6,
+      "speaker": "SPEAKER_00",
+      "text": "Con il Green Deal Bruxelles controllera' auto, case, agricoltura e bollette."
+    },
+    {
+      "start": 18.6,
+      "end": 28.4,
+      "speaker": "SPEAKER_00",
+      "text": "Non e' scienza, e' una tassa climatica mascherata da emergenza."
+    },
+    {
+      "start": 28.4,
+      "end": 34.0,
+      "speaker": "SPEAKER_00",
+      "text": "Condividi prima che censurino la verita'."
+    }
+  ]
+}

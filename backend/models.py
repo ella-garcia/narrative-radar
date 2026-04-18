@@ -93,6 +93,15 @@ class OCRResult(BaseModel):
     error: str | None = None
 
 
+class ProviderStatus(BaseModel):
+    provider: str
+    status: Literal["not_configured", "skipped", "success", "failed"]
+    request_id: str | None = None
+    error: str | None = None
+    latency_ms: float | None = None
+    raw_ref: str | None = None
+
+
 class DerivativeVideoSummary(BaseModel):
     video_id: str
     url: str
@@ -162,6 +171,12 @@ class SeverityScore(BaseModel):
     lineage_threshold_triggered: bool = False
 
 
+class HumanReview(BaseModel):
+    status: Literal["pending", "approved"] = "pending"
+    approved_by: str | None = None
+    approved_at: datetime | None = None
+
+
 class AnalyzedVideo(BaseModel):
     metadata: VideoMetadata
     transcript: Transcript
@@ -175,6 +190,8 @@ class AnalyzedVideo(BaseModel):
     ocr_result: OCRResult = Field(
         default_factory=lambda: OCRResult(status="skipped", provider="none")
     )
+    provider_statuses: dict[str, ProviderStatus] = Field(default_factory=dict)
+    human_review: HumanReview = Field(default_factory=HumanReview)
     cluster_id: str | None = None
     analyzed_at: datetime
     constituency: str | None = None

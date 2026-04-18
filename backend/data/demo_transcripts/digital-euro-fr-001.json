@@ -1,0 +1,28 @@
+{
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 7.4,
+      "speaker": "SPEAKER_00",
+      "text": "L'euro numerique est un outil de surveillance et de controle de la BCE."
+    },
+    {
+      "start": 7.4,
+      "end": 17.2,
+      "speaker": "SPEAKER_00",
+      "text": "Chaque paiement pourra etre suivi dans le portefeuille numerique."
+    },
+    {
+      "start": 17.2,
+      "end": 26.4,
+      "speaker": "SPEAKER_00",
+      "text": "Sans argent liquide, Bruxelles pourra limiter vos achats et vos deplacements."
+    },
+    {
+      "start": 26.4,
+      "end": 33.0,
+      "speaker": "SPEAKER_00",
+      "text": "Ce n'est pas de la modernisation, c'est du controle."
+    }
+  ]
+}

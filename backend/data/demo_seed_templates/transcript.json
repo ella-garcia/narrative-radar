@@ -1,0 +1,16 @@
+{
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 5.0,
+      "speaker": "SPEAKER_00",
+      "text": "First spoken sentence or subtitle line."
+    },
+    {
+      "start": 5.0,
+      "end": 10.5,
+      "speaker": "SPEAKER_00",
+      "text": "Second spoken sentence."
+    }
+  ]
+}

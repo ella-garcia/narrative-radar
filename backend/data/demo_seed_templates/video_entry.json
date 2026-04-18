@@ -1,0 +1,32 @@
+{
+  "video_id": "manual-demo-001",
+  "url": "https://www.tiktok.com/@example/video/1234567890",
+  "platform": "tiktok",
+  "title": "Short descriptive title",
+  "author": "@example",
+  "upload_date": "2026-04-18T12:00:00Z",
+  "view_count": 100000,
+  "like_count": 5000,
+  "duration_sec": 35,
+  "language": "en",
+  "hashtags": [
+    "#example",
+    "#demo"
+  ],
+  "description": "Caption or short description from the platform.",
+  "audio_id": "sound-manual-demo-001",
+  "audio_url": "https://www.tiktok.com/music/sound-manual-demo-001",
+  "lineage_source_kind": "audio",
+  "is_explicit_root_source": false,
+  "has_platform_ai_label": false,
+  "ocr_blocks": [
+    {
+      "text": "Visible on-screen text",
+      "confidence": 0.95,
+      "frame_sec": 4.0
+    }
+  ],
+  "transcript_path": "demo_transcripts/manual-demo-001.json",
+  "demo_synthetic_likelihood": 0.1,
+  "narrative_hint": "manual_demo"
+}

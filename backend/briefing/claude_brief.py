@@ -193,36 +193,6 @@ def generate(
 def _summary_via_claude(
     videos: list[AnalyzedVideo], constituency: str | None
 ) -> str:
-    from anthropic import Anthropic  # type: ignore[import-not-found]
+    from ..providers.anthropic_provider import summarize_briefing
 
-    client = Anthropic(api_key=SETTINGS.anthropic_api_key)
-    payload = {
-        "constituency": constituency,
-        "videos": [
-            {
-                "platform": v.metadata.platform.value,
-                "language": v.metadata.language,
-                "reach": v.metadata.view_count,
-                "severity": v.severity.label,
-                "score": v.severity.score,
-                "claims": [c.text for c in v.claims],
-                "matched_factchecks": [m.title for m in v.fact_check_matches],
-                "gap_refs": [g.article_ref for g in v.compliance_gaps],
-            }
-            for v in videos
-        ],
-    }
-    msg = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=400,
-        system=(
-            "You write 80-120 word executive summaries for parliamentary aides. "
-            "Strictly factual. Cite article references where present. Never "
-            "characterise content as disinformation; refer instead to potential "
-            "platform obligation failures. End with the line: 'Indicators only; "
-            "human review required.'"
-        ),
-        messages=[{"role": "user", "content": json.dumps(payload)}],
-    )
-    parts = [b.text for b in msg.content if hasattr(b, "text")]
-    return "\n".join(parts).strip()
+    return summarize_briefing(videos, constituency)

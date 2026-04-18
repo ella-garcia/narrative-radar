@@ -1,0 +1,28 @@
+{
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 8.0,
+      "speaker": "SPEAKER_00",
+      "text": "El cambio climatico es una excusa para justificar regulaciones de la Union Europea."
+    },
+    {
+      "start": 8.0,
+      "end": 17.5,
+      "speaker": "SPEAKER_00",
+      "text": "Bruselas usara el Green Deal para limitar coches, comida y energia."
+    },
+    {
+      "start": 17.5,
+      "end": 26.8,
+      "speaker": "SPEAKER_00",
+      "text": "Lo llaman emergencia climatica, pero es control economico."
+    },
+    {
+      "start": 26.8,
+      "end": 31.0,
+      "speaker": "SPEAKER_00",
+      "text": "Guarda este video antes de que desaparezca."
+    }
+  ]
+}

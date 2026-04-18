@@ -52,16 +52,13 @@ def fetch_metadata(url: str) -> VideoMetadata:
         return _demo_to_metadata(DEMO_BY_URL[url])
 
     try:
-        import yt_dlp  # type: ignore[import-not-found]
-    except ImportError:
-        # Soft fail — caller decides whether to error.
+        from ..providers.ytdlp_provider import extract_info
+        info = extract_info(url, download=False)
+    except Exception:
         raise RuntimeError(
             "yt-dlp not installed and URL not in demo cache. "
             "Install yt-dlp or add the URL to backend/data/demo_videos.json."
         )
-
-    with yt_dlp.YoutubeDL({"skip_download": True, "quiet": True}) as ydl:
-        info = ydl.extract_info(url, download=False)
     return _ytdlp_to_metadata(url, info)
 
 
@@ -131,3 +128,57 @@ def find_demo_by_id(video_id: str) -> dict[str, Any] | None:
 
 def all_demo_videos() -> list[dict[str, Any]]:
     return list(DEMO_VIDEOS)
+
+
+def demo_transcript_segments(demo: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return transcript segments from an inline fixture or an external file.
+
+    New demo videos can keep large transcripts in
+    backend/data/demo_transcripts/<video_id>.json and point to them with:
+
+        "transcript_path": "demo_transcripts/<video_id>.json"
+
+    The external file may be either a JSON list of segments or an object with a
+    top-level "segments" list.
+    """
+    if "transcript_segments" in demo:
+        return demo["transcript_segments"]
+
+    transcript_path = demo.get("transcript_path")
+    if not transcript_path:
+        video_id = demo.get("video_id", "(unknown)")
+        raise RuntimeError(
+            f"Demo video_id={video_id} has no transcript_segments or transcript_path."
+        )
+
+    path = _safe_data_path(str(transcript_path))
+    try:
+        payload = json.loads(path.read_text())
+    except FileNotFoundError as exc:
+        raise RuntimeError(
+            f"Demo transcript file not found for video_id={demo.get('video_id')}: "
+            f"{transcript_path}"
+        ) from exc
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(
+            f"Demo transcript file is not valid JSON for video_id={demo.get('video_id')}: "
+            f"{transcript_path}"
+        ) from exc
+
+    if isinstance(payload, list):
+        return payload
+    if isinstance(payload, dict) and isinstance(payload.get("segments"), list):
+        return payload["segments"]
+
+    raise RuntimeError(
+        f"Demo transcript file for video_id={demo.get('video_id')} must contain "
+        "a JSON list of segments or an object with a segments list."
+    )
+
+
+def _safe_data_path(relative_path: str) -> Path:
+    path = (DATA_DIR / relative_path).resolve()
+    data_root = DATA_DIR.resolve()
+    if data_root not in path.parents and path != data_root:
+        raise RuntimeError(f"Demo data path escapes backend/data: {relative_path}")
+    return path

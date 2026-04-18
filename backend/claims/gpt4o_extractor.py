@@ -41,7 +41,8 @@ def extract_claims(
 ) -> list[Claim]:
     if SETTINGS.openai_api_key:
         try:
-            return _extract_via_gpt4o(transcript, ocr_blocks or [])
+            from ..providers.openai_provider import extract_claims as extract_via_openai
+            return extract_via_openai(transcript, ocr_blocks or [])
         except Exception:
             # Demo robustness — fall through to mock if OpenAI errors out.
             return _extract_via_mock(transcript, ocr_blocks or [])
@@ -101,6 +102,7 @@ _RULES: list[tuple[set[str], str]] = [
     ({"election", "alegeri", "wahl", "wybory", "elezioni"}, "election"),
     ({"censure", "censura", "zensiert", "censored", "censur"}, "eu_institutions"),
     ({"commission", "kommission", "comisia", "comisión", "commissione"}, "eu_institutions"),
+    ({"digital", "euro", "cbdc", "ecb", "bce", "surveillance", "sorveglianza", "controle", "controllo"}, "eu_institutions"),
 ]
 
 
