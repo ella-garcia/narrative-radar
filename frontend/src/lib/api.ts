@@ -92,6 +92,12 @@ export const api = {
   getVideo: (id: string) =>
     fetch(`${BASE}/videos/${id}`).then((r) => j<AnalyzedVideo>(r)),
 
+  approveVideo: (id: string) =>
+    fetch(`${BASE}/videos/${id}/approve`, {
+      method: "POST",
+      headers: authHeaders(),
+    }).then((r) => j<AnalyzedVideo>(r)),
+
   dashboard: () =>
     fetch(`${BASE}/dashboard`).then((r) => j<DashboardSummary>(r)),
 

@@ -96,6 +96,33 @@ def test_audit_filters_by_action():
     assert recs and all(rec["action"] == "briefing_generated" for rec in recs)
 
 
+def test_approve_video_marks_human_review_and_audits():
+    client = TestClient(app)
+    client.post(
+        "/ingest",
+        json={"url": "https://www.tiktok.com/@calingeorgescu_official/video/7438219348761239045"},
+        headers={"X-Actor": "alice", "X-Role": "aide"},
+    )
+    r = client.post(
+        "/videos/ro-georgescu-001/approve",
+        headers={"X-Actor": "alice", "X-Role": "aide"},
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert body["human_review"]["status"] == "approved"
+    assert body["human_review"]["approved_by"] == "alice"
+    assert body["human_review"]["approved_at"]
+
+    audit_response = client.get(
+        "/audit",
+        headers={"X-Role": "dpo"},
+        params={"action": "video_approved"},
+    )
+    assert audit_response.status_code == 200
+    records = audit_response.json()["records"]
+    assert records and records[0]["detail"]["video_id"] == "ro-georgescu-001"
+
+
 def test_briefing_hash_recorded_in_audit():
     client = TestClient(app)
     client.post(

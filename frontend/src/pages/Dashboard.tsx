@@ -185,6 +185,7 @@ export function Dashboard() {
                   key={v.metadata.video_id}
                   video={v}
                   onOpen={() => setOpen(v)}
+                  onApproved={refresh}
                 />
               ))}
             </div>

@@ -1,0 +1,28 @@
+{
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 7.2,
+      "speaker": "SPEAKER_00",
+      "text": "The digital euro is a surveillance and control tool from the ECB."
+    },
+    {
+      "start": 7.2,
+      "end": 17.8,
+      "speaker": "SPEAKER_00",
+      "text": "Every payment in the wallet can be tracked, limited, or switched off."
+    },
+    {
+      "start": 17.8,
+      "end": 28.5,
+      "speaker": "SPEAKER_00",
+      "text": "Once cash disappears, Brussels can control what you buy and where you go."
+    },
+    {
+      "start": 28.5,
+      "end": 36.0,
+      "speaker": "SPEAKER_00",
+      "text": "They call it convenience, but it is financial surveillance."
+    }
+  ]
+}

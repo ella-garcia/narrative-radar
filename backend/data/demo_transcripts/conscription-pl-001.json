@@ -1,0 +1,28 @@
+{
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 8.2,
+      "speaker": "SPEAKER_00",
+      "text": "Bruksela przygotowuje obowiazkowy pobor do europejskiej armii."
+    },
+    {
+      "start": 8.2,
+      "end": 18.7,
+      "speaker": "SPEAKER_00",
+      "text": "Polscy mlodzi ludzie maja byc wysylani na wojne bez prawdziwej zgody parlamentu."
+    },
+    {
+      "start": 18.7,
+      "end": 31.5,
+      "speaker": "SPEAKER_00",
+      "text": "Unia Europejska nie mowi tego glosno, ale armia UE oznacza przymusowa sluzbe."
+    },
+    {
+      "start": 31.5,
+      "end": 42.0,
+      "speaker": "SPEAKER_00",
+      "text": "Udostepnij zanim media powiedza, ze to tylko teoria."
+    }
+  ]
+}

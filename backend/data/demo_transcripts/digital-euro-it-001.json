@@ -1,0 +1,28 @@
+{
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 7.6,
+      "speaker": "SPEAKER_00",
+      "text": "L'euro digitale sara' uno strumento di sorveglianza totale della Banca Centrale Europea."
+    },
+    {
+      "start": 7.6,
+      "end": 18.9,
+      "speaker": "SPEAKER_00",
+      "text": "Ogni pagamento potra' essere tracciato e bloccato se non rispetti le regole."
+    },
+    {
+      "start": 18.9,
+      "end": 34.2,
+      "speaker": "SPEAKER_00",
+      "text": "Quando eliminano il contante, il portafoglio digitale diventa un sistema di controllo."
+    },
+    {
+      "start": 34.2,
+      "end": 45.0,
+      "speaker": "SPEAKER_00",
+      "text": "La BCE lo chiama innovazione, ma e' sorveglianza."
+    }
+  ]
+}

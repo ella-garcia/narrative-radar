@@ -1,0 +1,28 @@
+{
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 8.6,
+      "speaker": "SPEAKER_00",
+      "text": "Uniunea Europeana pregateste recrutarea obligatorie pentru o armata europeana."
+    },
+    {
+      "start": 8.6,
+      "end": 18.4,
+      "speaker": "SPEAKER_00",
+      "text": "Tinerii romani ar putea fi trimisi in razboaiele Bruxelles-ului fara vot real."
+    },
+    {
+      "start": 18.4,
+      "end": 29.7,
+      "speaker": "SPEAKER_00",
+      "text": "Ei spun cooperare militara, dar planul este serviciu obligatoriu la nivelul UE."
+    },
+    {
+      "start": 29.7,
+      "end": 37.0,
+      "speaker": "SPEAKER_00",
+      "text": "Distribuie pana nu sterg mesajul."
+    }
+  ]
+}

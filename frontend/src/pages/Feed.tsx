@@ -59,6 +59,17 @@ export function Feed() {
     return Array.from(all).sort();
   }, [videos]);
 
+  function updateVideo(updated: AnalyzedVideo) {
+    setVideos((current) =>
+      current.map((v) =>
+        v.metadata.video_id === updated.metadata.video_id ? updated : v,
+      ),
+    );
+    setOpen((current) =>
+      current?.metadata.video_id === updated.metadata.video_id ? updated : current,
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -152,6 +163,7 @@ export function Feed() {
               key={v.metadata.video_id}
               video={v}
               onOpen={() => setOpen(v)}
+              onApproved={updateVideo}
             />
           ))}
         </div>

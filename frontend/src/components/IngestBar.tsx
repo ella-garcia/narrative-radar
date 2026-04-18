@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import type { DemoVideo } from "../lib/types";
+import { compactNumber } from "../lib/format";
 
 export function IngestBar({
   onIngested,
@@ -45,7 +46,7 @@ export function IngestBar({
         </div>
         {busy && (
           <div className="text-xs text-eu-blue animate-pulse">
-            Running pipeline · transcribe · extract claims · match · check DSA…
+            Running pipeline · transcribe · extract claims · match · check DSA...
           </div>
         )}
       </div>
@@ -91,10 +92,17 @@ export function IngestBar({
                 key={d.video_id}
                 onClick={() => ingest(d.url)}
                 disabled={busy}
-                className="text-xs px-2 py-1 rounded border border-eu-slate-200 hover:border-eu-blue hover:bg-eu-blue/5 text-eu-slate-700 disabled:opacity-50"
-                title={d.title}
+                className="text-left px-3 py-2 rounded-md border border-eu-slate-200 hover:border-eu-blue hover:bg-eu-blue/5 text-eu-slate-700 disabled:opacity-50 transition-colors"
+                title={`${d.title}\n${compactNumber(d.view_count)} views · ${d.derivative_count} derivative video(s) · ${compactNumber(d.derivative_aggregate_reach)} derivative reach`}
               >
-                {d.narrative_hint?.replace(/_/g, " ") ?? d.video_id} · {d.language.toUpperCase()}
+                <span className="block text-xs font-medium">
+                  {d.narrative_hint?.replace(/_/g, " ") ?? d.video_id} · {d.language.toUpperCase()}
+                </span>
+                <span className="block mt-0.5 text-[10px] text-eu-slate-500 tabular-nums">
+                  {compactNumber(d.view_count)} views · spread {d.derivative_count}
+                  {d.derivative_count > 0 ? ` · ${compactNumber(d.derivative_aggregate_reach)} reach` : ""}
+                  {d.derivative_languages.length > 0 ? ` · langs ${d.derivative_languages.map((l) => l.toUpperCase()).join("/")}` : ""}
+                </span>
               </button>
             ))}
           </div>

@@ -67,6 +67,25 @@ npm run dev                                         # http://localhost:5173
 
 The frontend proxies `/api` to `http://localhost:8000`, so you can develop both without CORS friction.
 
+### Local testing
+
+Use the full local test playbook in [`docs/LOCAL_TESTING.md`](docs/LOCAL_TESTING.md).
+The short path is:
+
+```bash
+pytest
+uvicorn backend.main:app --port 8000 --reload
+cd frontend && npm run dev
+# in another shell from the repo root
+scripts/local_smoke.sh
+```
+
+The smoke script checks the localhost API contract, expected auth/error
+responses, a demo ingest, briefing generation, and the Vite root page.
+
+To manually add offline demo URLs, metadata, OCR, and transcripts, use
+[`docs/DEMO_SEEDING.md`](docs/DEMO_SEEDING.md).
+
 ### In VSCode / Cursor
 
 The repo ships `.vscode/launch.json` — open the project, press **F5**, pick
@@ -84,6 +103,9 @@ To upgrade matching quality, install sentence-transformers and call
 | Romania 2024 — Călin Georgescu / TikTok (3 videos) | The annulled Romanian presidential election. Lights up DSA Art. 34-35 with a TikTok DSA TDB cross-reference of 124,583 actions on `ELECTORAL_INTEGRITY_RO`. |
 | Doppelgänger campaign (4 videos: FR / DE / PL / IT) | Cross-language Russian impersonation operation. Lights up DSA Art. 26 *high-severity, cross-language* — backed by Meta's own published Adversarial Threat Reports. |
 | AI-audio impersonation of Ursula von der Leyen | Lights up AI Act Art. 50 because the platform never surfaced the AI-disclosure label. |
+| Climate-hoax Green Deal cluster (2 videos: IT / ES) | Shows a small derivative spread radius: shared audio, low-to-medium aggregate reach, and climate-denial fact-check matching. |
+| EU conscription cluster (3 videos: PL / DE / RO) | Shows a medium derivative spread radius across three accounts and languages, mapped to the EU militarisation narrative. |
+| Digital euro surveillance cluster (3 videos: IT / EN / FR) | Shows a higher-reach derivative spread radius around the CBDC surveillance/control narrative. |
 
 Each case is real-world grounded in publicly documented incidents (EUvsDisinfo, EDMO, EC press release IP/24/6487, Correctiv, Viginum, Pagella Politica, Demagog).
 
@@ -110,7 +132,8 @@ backend/
   briefing/claude_brief.py
   data/
     seed_factchecks.json         # ~22 real EDMO / EUvsDisinfo cases
-    demo_videos.json             # 8 pre-cached demo videos
+    demo_videos.json             # 16 pre-cached demo videos
+    demo_transcripts/            # optional per-video demo transcripts
     dsa_tdb_seed.json            # subset of EU DSA Transparency DB
   tests/                         # 23 tests — severity, rules, matcher, e2e
 frontend/

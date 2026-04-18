@@ -23,6 +23,15 @@ export interface OCRResult {
   error?: string | null;
 }
 
+export interface ProviderStatus {
+  provider: string;
+  status: "not_configured" | "skipped" | "success" | "failed";
+  request_id?: string | null;
+  error?: string | null;
+  latency_ms?: number | null;
+  raw_ref?: string | null;
+}
+
 export interface Transcript {
   language: string;
   segments: {
@@ -73,6 +82,12 @@ export interface SeverityScore {
   root_multiplier_applied: boolean;
   critical_floor_applied: boolean;
   lineage_threshold_triggered: boolean;
+}
+
+export interface HumanReview {
+  status: "pending" | "approved";
+  approved_by?: string | null;
+  approved_at?: string | null;
 }
 
 export interface VideoMetadata {
@@ -128,6 +143,8 @@ export interface AnalyzedVideo {
   synthetic_media_likelihood?: number | null;
   derivative_spread: DerivativeSpread;
   ocr_result: OCRResult;
+  provider_statuses: Record<string, ProviderStatus>;
+  human_review: HumanReview;
   cluster_id?: string | null;
   analyzed_at: string;
   constituency?: string | null;
@@ -158,6 +175,11 @@ export interface DemoVideo {
   title: string;
   language: string;
   narrative_hint?: string | null;
+  view_count: number;
+  audio_id?: string | null;
+  derivative_count: number;
+  derivative_aggregate_reach: number;
+  derivative_languages: string[];
 }
 
 export interface Briefing {

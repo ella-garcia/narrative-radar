@@ -12,21 +12,56 @@ from .lineage import choose_provider, pending_for, should_schedule
 from .match.matcher import best_cluster, match_claims
 from .models import AnalyzedVideo, ComplianceGap, DerivativeSpread
 from .ocr import extract_ocr
+from .providers.base import status as provider_status
+from .providers.media import MediaArtifacts, download_media, extract_audio, extract_frames
 from .scoring.severity import score as severity_score
 from .transcribe.whisperx_runner import transcribe_video
 
 
 def analyze_url(url: str, constituency: str | None = None) -> AnalyzedVideo:
     metadata = fetch_metadata(url)
-
-    transcript = transcribe_video(metadata.video_id, metadata.language)
-    ocr_result = extract_ocr(metadata)
-    claims = extract_claims(transcript, ocr_result.blocks)
-    matches = match_claims(claims)
-    cluster, _ = best_cluster(claims)
-
+    provider_statuses = {}
     demo = find_demo_by_id(metadata.video_id) or {}
-    synth = demo.get("demo_synthetic_likelihood")
+    artifacts: MediaArtifacts | None = None
+    audio_path = None
+    frame_paths = None
+    try:
+        if not demo:
+            try:
+                artifacts = download_media(url)
+                provider_statuses["media"] = provider_status("yt-dlp", "success")
+                try:
+                    audio_path = extract_audio(artifacts)
+                    provider_statuses["audio_extract"] = provider_status("ffmpeg", "success")
+                except Exception as exc:
+                    provider_statuses["audio_extract"] = provider_status("ffmpeg", "failed", error=exc)
+                try:
+                    frame_paths = extract_frames(artifacts)
+                    provider_statuses["frame_extract"] = provider_status("ffmpeg", "success")
+                except Exception as exc:
+                    provider_statuses["frame_extract"] = provider_status("ffmpeg", "failed", error=exc)
+            except Exception as exc:
+                provider_statuses["media"] = provider_status("yt-dlp", "skipped", error=exc)
+
+        transcript = transcribe_video(metadata.video_id, metadata.language, audio_path)
+        provider_statuses["transcription"] = provider_status(
+            "demo" if demo else "openai", "success"
+        )
+        ocr_result = extract_ocr(metadata, frame_paths)
+        provider_statuses["ocr"] = provider_status(ocr_result.provider, ocr_result.status if ocr_result.status != "complete" else "success", error=ocr_result.error)
+        claims = extract_claims(transcript, ocr_result.blocks)
+        provider_statuses["claims"] = provider_status(
+            "openai" if not demo else "demo_or_fallback", "success"
+        )
+        matches = match_claims(claims)
+        cluster, _ = best_cluster(claims)
+
+        synth = _synthetic_likelihood(metadata, demo, artifacts)
+        if synth is not None and not demo:
+            provider_statuses["hive"] = provider_status("hive", "success")
+    finally:
+        if artifacts:
+            artifacts.cleanup()
 
     derivative_spread = _initial_derivative_spread(metadata, matches)
 
@@ -41,6 +76,7 @@ def analyze_url(url: str, constituency: str | None = None) -> AnalyzedVideo:
         synthetic_media_likelihood=synth,
         derivative_spread=derivative_spread,
         ocr_result=ocr_result,
+        provider_statuses=provider_statuses,
         cluster_id=cluster,
         analyzed_at=datetime.now(tz=timezone.utc),
         constituency=constituency,
@@ -49,6 +85,19 @@ def analyze_url(url: str, constituency: str | None = None) -> AnalyzedVideo:
     analysed = _recompute(analysed, storage.all_videos())
     storage.upsert(analysed)
     return analysed
+
+
+def _synthetic_likelihood(metadata, demo, artifacts: MediaArtifacts | None) -> float | None:
+    if demo:
+        return demo.get("demo_synthetic_likelihood")
+    try:
+        from .providers.hive_provider import detect_synthetic_media
+
+        media_path = artifacts.video_path if artifacts else None
+        score, _payload = detect_synthetic_media(media_path=media_path, media_url=metadata.url)
+        return score
+    except Exception:
+        return None
 
 
 def enrich_lineage(video_id: str) -> AnalyzedVideo | None:
