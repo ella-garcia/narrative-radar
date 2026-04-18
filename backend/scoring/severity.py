@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from typing import Literal
 
 from ..config import SETTINGS
-from ..models import SeverityScore
+from ..models import DerivativeSpread, SeverityScore
 
 
 def _reach_component(view_count: int) -> float:
@@ -57,6 +57,8 @@ def score(
     upload_date: datetime,
     claim_count: int,
     match_count: int,
+    derivative_spread: DerivativeSpread | None = None,
+    is_explicit_root_source: bool = False,
 ) -> SeverityScore:
     s = SETTINGS
     reach = _reach_component(view_count)
@@ -68,12 +70,33 @@ def score(
         + s.severity_w_signal * sig
     )
     pct = round(raw * 100.0, 2)
+    final = pct
+    root_multiplier_applied = False
+    critical_floor_applied = False
+    lineage_threshold_triggered = False
+    if derivative_spread and derivative_spread.status == "complete":
+        if is_explicit_root_source and derivative_spread.root_proof_status == "proven":
+            final = round(min(100.0, final * s.severity_root_multiplier), 2)
+            root_multiplier_applied = True
+        if (
+            derivative_spread.derivative_count >= s.severity_lineage_critical_floor_count
+            or derivative_spread.aggregate_reach >= s.severity_lineage_critical_floor_reach
+        ):
+            lineage_threshold_triggered = True
+            if final < 75:
+                final = 75.0
+                critical_floor_applied = True
     return SeverityScore(
-        score=pct,
-        label=_label(pct),
+        score=final,
+        label=_label(final),
         components={
             "reach": round(reach, 4),
             "recency": round(rec, 4),
             "signal": round(sig, 4),
         },
+        base_score=pct,
+        final_score=final,
+        root_multiplier_applied=root_multiplier_applied,
+        critical_floor_applied=critical_floor_applied,
+        lineage_threshold_triggered=lineage_threshold_triggered,
     )

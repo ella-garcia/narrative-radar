@@ -28,6 +28,16 @@ export function Dashboard() {
     refresh();
   }, [refresh]);
 
+  useEffect(() => {
+    if (!data) return;
+    const hasPending = data.top_threats.some((v) => v.derivative_spread.status === "pending");
+    if (!hasPending) return;
+    const t = window.setInterval(() => {
+      refresh();
+    }, 4000);
+    return () => window.clearInterval(t);
+  }, [data, refresh]);
+
   if (error) {
     return (
       <div className="surface p-6 text-sev-critical">

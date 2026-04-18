@@ -80,6 +80,10 @@ def _demo_to_metadata(d: dict[str, Any]) -> VideoMetadata:
         language=d["language"],
         has_platform_ai_label=d.get("has_platform_ai_label", False),
         description=d.get("description", ""),
+        audio_id=d.get("audio_id"),
+        audio_url=d.get("audio_url"),
+        lineage_source_kind=d.get("lineage_source_kind"),
+        is_explicit_root_source=bool(d.get("is_explicit_root_source", False)),
     )
 
 
@@ -89,6 +93,13 @@ def _ytdlp_to_metadata(url: str, info: dict[str, Any]) -> VideoMetadata:
         datetime.strptime(upload_str, "%Y%m%d") if upload_str else datetime.utcnow()
     )
     tags = info.get("tags") or []
+    music = info.get("music")
+    audio_id = info.get("track_id")
+    if not audio_id and isinstance(music, dict):
+        audio_id = music.get("id")
+    audio_url = None
+    if audio_id:
+        audio_url = f"https://www.tiktok.com/music/{audio_id}"
     return VideoMetadata(
         video_id=str(info.get("id") or url),
         url=url,
@@ -103,6 +114,14 @@ def _ytdlp_to_metadata(url: str, info: dict[str, Any]) -> VideoMetadata:
         language=(info.get("language") or "en")[:2],
         has_platform_ai_label=bool(info.get("ai_generated") or False),
         description=info.get("description") or "",
+        audio_id=str(audio_id) if audio_id else None,
+        audio_url=audio_url,
+        lineage_source_kind="audio" if audio_id else None,
+        is_explicit_root_source=bool(
+            info.get("is_original_sound")
+            or info.get("original")
+            or info.get("is_original_audio")
+        ),
     )
 
 

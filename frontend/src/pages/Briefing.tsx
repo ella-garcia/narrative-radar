@@ -278,6 +278,14 @@ function BriefingDocument({ briefing }: { briefing: BriefingT }) {
                       ))}
                     </div>
                   )}
+                  {e.derivative_spread_radius && (
+                    <div className="text-xs mt-2 text-eu-slate-700">
+                      <span className="font-semibold">Derivative Spread Radius:</span>{" "}
+                      {e.derivative_spread_radius.derivative_count} subsequent videos ·{" "}
+                      {compactNumber(e.derivative_spread_radius.aggregate_reach)} aggregate reach ·{" "}
+                      root proof {e.derivative_spread_radius.root_proof_status}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

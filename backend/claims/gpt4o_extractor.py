@@ -8,14 +8,15 @@ import json
 import re
 
 from ..config import SETTINGS
-from ..models import Claim, Transcript
+from ..models import Claim, OCRTextBlock, Transcript
 
 
 CLAIM_SCHEMA_PROMPT = """You are a claim-extraction assistant for parliamentary fact-checkers.
 
-From the transcript provided, extract the discrete, verifiable factual claims
+From the transcript and OCR text provided, extract the discrete, verifiable factual claims
 the speaker is asserting. DO NOT interpret, characterise, or rebut. Extract
 facts exactly as asserted. Skip rhetorical questions, opinions, and exhortations.
+When OCR text contains meaningful overlay claims, include those as claims too.
 
 Return STRICT JSON in this schema:
 {
@@ -34,14 +35,17 @@ Aim for 2-6 claims. Skip none-found and return an empty list rather than fabrica
 """
 
 
-def extract_claims(transcript: Transcript) -> list[Claim]:
+def extract_claims(
+    transcript: Transcript,
+    ocr_blocks: list[OCRTextBlock] | None = None,
+) -> list[Claim]:
     if SETTINGS.openai_api_key:
         try:
-            return _extract_via_gpt4o(transcript)
+            return _extract_via_gpt4o(transcript, ocr_blocks or [])
         except Exception:
             # Demo robustness — fall through to mock if OpenAI errors out.
-            return _extract_via_mock(transcript)
-    return _extract_via_mock(transcript)
+            return _extract_via_mock(transcript, ocr_blocks or [])
+    return _extract_via_mock(transcript, ocr_blocks or [])
 
 
 # -----------------------------------------------------------------------------
@@ -49,14 +53,19 @@ def extract_claims(transcript: Transcript) -> list[Claim]:
 # -----------------------------------------------------------------------------
 
 
-def _extract_via_gpt4o(transcript: Transcript) -> list[Claim]:
+def _extract_via_gpt4o(transcript: Transcript, ocr_blocks: list[OCRTextBlock]) -> list[Claim]:
     from openai import OpenAI  # type: ignore[import-not-found]
 
     client = OpenAI(api_key=SETTINGS.openai_api_key)
     user = (
         f"Language: {transcript.language}\n"
         f"Confidence: {transcript.confidence}\n"
-        f"Transcript:\n{transcript.full_text}"
+        f"Transcript:\n{transcript.full_text}\n\n"
+        "OCR text blocks:\n"
+        + "\n".join(
+            f"- {b.text} (confidence={b.confidence}, frame_sec={b.frame_sec})"
+            for b in ocr_blocks
+        )
     )
     resp = client.chat.completions.create(
         model="gpt-4o-mini",
@@ -95,11 +104,21 @@ _RULES: list[tuple[set[str], str]] = [
 ]
 
 
-def _extract_via_mock(transcript: Transcript) -> list[Claim]:
+def _extract_via_mock(
+    transcript: Transcript,
+    ocr_blocks: list[OCRTextBlock],
+) -> list[Claim]:
     out: list[Claim] = []
     seen_texts: set[str] = set()
-    for seg in transcript.segments:
-        text: str = seg["text"]
+    sources = [
+        ("transcript", seg["text"], seg.get("speaker"), seg.get("start"), seg.get("end"))
+        for seg in transcript.segments
+    ] + [
+        ("ocr", block.text, None, block.frame_sec, block.frame_sec)
+        for block in ocr_blocks
+        if block.text.strip()
+    ]
+    for _, text, speaker, start, end in sources:
         normalised = re.sub(r"[^\w\s]", " ", text.lower())
         words = set(normalised.split())
         for keywords, category in _RULES:
@@ -111,23 +130,23 @@ def _extract_via_mock(transcript: Transcript) -> list[Claim]:
                     Claim(
                         text=text.strip(),
                         category=category,
-                        speaker=seg.get("speaker"),
-                        start_sec=seg.get("start"),
-                        end_sec=seg.get("end"),
+                        speaker=speaker,
+                        start_sec=start,
+                        end_sec=end,
                     )
                 )
                 break
-    if not out and transcript.segments:
+    if not out and sources:
         # Surface at least one claim so downstream stages have something to work
         # with. Marked 'other' to keep the system honest about its weak signal.
-        s = transcript.segments[0]
+        _, text, speaker, start, end = sources[0]
         out.append(
             Claim(
-                text=s["text"].strip(),
+                text=text.strip(),
                 category="other",
-                speaker=s.get("speaker"),
-                start_sec=s.get("start"),
-                end_sec=s.get("end"),
+                speaker=speaker,
+                start_sec=start,
+                end_sec=end,
             )
         )
     return out[:6]

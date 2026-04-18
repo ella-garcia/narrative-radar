@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import threading
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -22,7 +23,7 @@ from .models import (
     IngestRequest,
     NarrativeCluster,
 )
-from .pipeline import analyze_url
+from .pipeline import analyze_url, enrich_lineage
 
 app = FastAPI(
     title="Narrative Radar",
@@ -97,8 +98,25 @@ def ingest(
             "severity_label": v.severity.label,
             "gap_refs": [g.article_ref for g in v.compliance_gaps],
             "cluster_id": v.cluster_id,
+            "lineage_status": v.derivative_spread.status,
         },
     )
+    if v.derivative_spread.status == "pending":
+        audit.log(
+            actor=x_actor or "anonymous",
+            role=x_role or "aide",
+            action="lineage_enrichment_started",
+            detail={
+                "video_id": v.metadata.video_id,
+                "audio_id": v.derivative_spread.audio_id,
+                "provider": v.derivative_spread.provider,
+            },
+        )
+        threading.Thread(
+            target=_run_lineage_enrichment,
+            args=(v.metadata.video_id, x_actor or "anonymous", x_role or "aide"),
+            daemon=True,
+        ).start()
     return v
 
 
@@ -196,6 +214,32 @@ def clear_storage(
         detail={"records_removed": n},
     )
     return {"status": "cleared"}
+
+
+def _run_lineage_enrichment(video_id: str, actor: str, role: str) -> None:
+    try:
+        v = enrich_lineage(video_id)
+        if not v:
+            return
+        audit.log(
+            actor=actor,
+            role=role,
+            action="lineage_enrichment_completed",
+            detail={
+                "video_id": video_id,
+                "status": v.derivative_spread.status,
+                "derivative_count": v.derivative_spread.derivative_count,
+                "aggregate_reach": v.derivative_spread.aggregate_reach,
+                "error": v.derivative_spread.error,
+            },
+        )
+    except Exception as exc:
+        audit.log(
+            actor=actor,
+            role=role,
+            action="lineage_enrichment_failed",
+            detail={"video_id": video_id, "error": str(exc)},
+        )
 
 
 # -----------------------------------------------------------------------------

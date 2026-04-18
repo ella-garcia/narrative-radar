@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { api } from "../lib/api";
 import type { AnalyzedVideo } from "../lib/types";
 import { compactNumber, flag, platformLabel, relativeDate } from "../lib/format";
 import { SeverityMeter } from "./SeverityMeter";
@@ -23,6 +24,12 @@ export function VideoDetailDrawer({
   video: AnalyzedVideo;
   onClose: () => void;
 }) {
+  const [liveVideo, setLiveVideo] = useState(video);
+
+  useEffect(() => {
+    setLiveVideo(video);
+  }, [video]);
+
   useEffect(() => {
     function esc(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -35,9 +42,26 @@ export function VideoDetailDrawer({
     };
   }, [onClose]);
 
-  const m = video.metadata;
-  const synth = video.synthetic_media_likelihood;
-  const lowConf = video.transcript.confidence !== "high";
+  useEffect(() => {
+    if (liveVideo.derivative_spread.status !== "pending") return;
+    let cancelled = false;
+    const t = window.setInterval(async () => {
+      try {
+        const fresh = await api.getVideo(liveVideo.metadata.video_id);
+        if (!cancelled) setLiveVideo(fresh);
+      } catch {
+        // Ignore transient polling failures in the drawer.
+      }
+    }, 3000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(t);
+    };
+  }, [liveVideo.derivative_spread.status, liveVideo.metadata.video_id]);
+
+  const m = liveVideo.metadata;
+  const synth = liveVideo.synthetic_media_likelihood;
+  const lowConf = liveVideo.transcript.confidence !== "high";
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end" onClick={onClose}>
@@ -53,9 +77,9 @@ export function VideoDetailDrawer({
               <div className="flex flex-wrap items-center gap-1.5 mb-1">
                 <span className="chip">{platformLabel(m.platform)}</span>
                 <span className="chip">{flag(m.language)} {m.language.toUpperCase()}</span>
-                {video.cluster_id && (
+                {liveVideo.cluster_id && (
                   <span className="chip bg-eu-blue/5 text-eu-blue">
-                    {video.cluster_id.replace(/_/g, " ")}
+                    {liveVideo.cluster_id.replace(/_/g, " ")}
                   </span>
                 )}
               </div>
@@ -74,24 +98,24 @@ export function VideoDetailDrawer({
             </button>
           </div>
           <div className="mt-3">
-            <SeverityMeter score={video.severity.score} label={video.severity.label} />
+            <SeverityMeter score={liveVideo.severity.score} label={liveVideo.severity.label} />
           </div>
         </div>
 
         {lowConf && (
           <div className="mx-6 mt-4 surface-tight bg-amber-50 border-amber-200 px-4 py-3 text-sm text-amber-900">
             ⚠ <strong>Human review required.</strong>{" "}
-            {video.transcript.low_confidence_warning ??
-              `ASR + LLM confidence is ${video.transcript.confidence}.`}
+            {liveVideo.transcript.low_confidence_warning ??
+              `ASR + LLM confidence is ${liveVideo.transcript.confidence}.`}
           </div>
         )}
 
         <Section title="Compliance gap indicators">
-          {video.compliance_gaps.length === 0 ? (
+          {liveVideo.compliance_gaps.length === 0 ? (
             <p className="text-sm text-eu-slate-500">No gap indicators above threshold for this item.</p>
           ) : (
             <div className="space-y-3">
-              {video.compliance_gaps.map((g) => (
+              {liveVideo.compliance_gaps.map((g) => (
                 <div key={g.article_ref} className="surface-tight p-4">
                   <div className="flex items-center justify-between gap-2 mb-2">
                     <ViolationBadge articleRef={g.article_ref} severity={g.severity} />
@@ -117,9 +141,48 @@ export function VideoDetailDrawer({
           )}
         </Section>
 
+        <Section title="Derivative spread radius">
+          {liveVideo.derivative_spread.status === "not_applicable" ? (
+            <p className="text-sm text-eu-slate-500">No lineage enrichment was scheduled for this item.</p>
+          ) : liveVideo.derivative_spread.status === "pending" ? (
+            <p className="text-sm text-eu-blue">Lineage enrichment is still running. This drawer refreshes automatically.</p>
+          ) : liveVideo.derivative_spread.status === "failed" ? (
+            <p className="text-sm text-sev-medium">
+              Lineage enrichment failed. {liveVideo.derivative_spread.error ?? "No further detail available."}
+            </p>
+          ) : (
+            <div className="space-y-3">
+              <div className="surface-tight p-4 text-sm">
+                <div className="flex flex-wrap gap-3 text-eu-slate-700">
+                  <span><strong>{liveVideo.derivative_spread.derivative_count}</strong> derivative videos</span>
+                  <span><strong>{compactNumber(liveVideo.derivative_spread.aggregate_reach)}</strong> aggregate reach</span>
+                  <span>root proof: <strong>{liveVideo.derivative_spread.root_proof_status}</strong></span>
+                </div>
+                {liveVideo.derivative_spread.audio_id && (
+                  <div className="mt-2 text-xs text-eu-slate-500 font-mono">
+                    audio_id {liveVideo.derivative_spread.audio_id}
+                  </div>
+                )}
+              </div>
+              {liveVideo.derivative_spread.sample_videos.length > 0 && (
+                <div className="space-y-2">
+                  {liveVideo.derivative_spread.sample_videos.slice(0, 6).map((child) => (
+                    <div key={child.video_id} className="surface-tight p-3 text-sm">
+                      <div className="font-medium text-eu-ink">{child.title || child.video_id}</div>
+                      <div className="text-xs text-eu-slate-500 mt-1">
+                        {child.author} {child.language ? `· ${flag(child.language)} ${child.language.toUpperCase()}` : ""} · {compactNumber(child.view_count)} views
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </Section>
+
         <Section title="Extracted claims">
           <div className="space-y-2">
-            {video.claims.map((c, i) => (
+            {liveVideo.claims.map((c, i) => (
               <div key={i} className="surface-tight p-3 text-sm">
                 <div className="flex items-center gap-2 mb-1">
                   <span className={`badge ${CATEGORY_PALETTE[c.category] ?? CATEGORY_PALETTE.other}`}>
@@ -138,12 +201,33 @@ export function VideoDetailDrawer({
           </div>
         </Section>
 
+        <Section title="OCR text">
+          {liveVideo.ocr_result.blocks.length === 0 ? (
+            <p className="text-sm text-eu-slate-500">
+              OCR status: {liveVideo.ocr_result.status}
+              {liveVideo.ocr_result.error ? ` · ${liveVideo.ocr_result.error}` : ""}
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {liveVideo.ocr_result.blocks.map((b, i) => (
+                <div key={i} className="surface-tight p-3 text-sm">
+                  <div className="text-eu-ink">{b.text}</div>
+                  <div className="text-[11px] text-eu-slate-500 mt-1">
+                    {b.source} · confidence {b.confidence?.toFixed(2) ?? "n/a"}
+                    {b.frame_sec != null ? ` · ${b.frame_sec.toFixed(0)}s` : ""}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Section>
+
         <Section title="EDMO / EUvsDisinfo matches">
-          {video.fact_check_matches.length === 0 ? (
+          {liveVideo.fact_check_matches.length === 0 ? (
             <p className="text-sm text-eu-slate-500">No fact-check matches above threshold.</p>
           ) : (
             <div className="space-y-2">
-              {video.fact_check_matches.map((m) => (
+              {liveVideo.fact_check_matches.map((m) => (
                 <a
                   key={m.factcheck_id}
                   href={m.source_url}
@@ -167,10 +251,10 @@ export function VideoDetailDrawer({
           )}
         </Section>
 
-        {video.dsa_tdb_cross_refs.length > 0 && (
+        {liveVideo.dsa_tdb_cross_refs.length > 0 && (
           <Section title="EU DSA Transparency DB cross-reference">
             <div className="space-y-2">
-              {video.dsa_tdb_cross_refs.map((c, i) => (
+              {liveVideo.dsa_tdb_cross_refs.map((c, i) => (
                 <div key={i} className="surface-tight p-3 text-sm">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="chip">{c.platform.toUpperCase()}</span>
@@ -196,7 +280,7 @@ export function VideoDetailDrawer({
 
         <Section title="Transcript">
           <div className="surface-tight p-3 max-h-72 overflow-y-auto space-y-1.5">
-            {video.transcript.segments.map((s, i) => (
+            {liveVideo.transcript.segments.map((s, i) => (
               <div key={i} className="text-sm">
                 <span className="text-[10px] text-eu-slate-400 font-mono mr-2 align-top">
                   {s.start.toFixed(0)}s · {s.speaker}
@@ -219,18 +303,28 @@ export function VideoDetailDrawer({
             <dd>{m.hashtags.join(" ") || "—"}</dd>
             <dt className="text-eu-slate-500">Platform AI label present</dt>
             <dd>{m.has_platform_ai_label ? "Yes" : "No (audited under AI Act Art. 50)"}</dd>
+            <dt className="text-eu-slate-500">Lineage audio ID</dt>
+            <dd className="font-mono">{m.audio_id ?? "n/a"}</dd>
+            <dt className="text-eu-slate-500">Explicit root source</dt>
+            <dd>{m.is_explicit_root_source ? "Yes" : "No"}</dd>
             <dt className="text-eu-slate-500">3rd-party synthetic-media likelihood</dt>
             <dd className="font-mono">{synth != null ? synth.toFixed(2) : "n/a"} <span className="text-eu-slate-400">(metadata only — never gates a gap on its own)</span></dd>
             <dt className="text-eu-slate-500">Severity components</dt>
             <dd className="font-mono">
-              reach {video.severity.components.reach} · recency {video.severity.components.recency} · signal {video.severity.components.signal}
+              reach {liveVideo.severity.components.reach} · recency {liveVideo.severity.components.recency} · signal {liveVideo.severity.components.signal}
+            </dd>
+            <dt className="text-eu-slate-500">Scoring outcome</dt>
+            <dd className="font-mono">
+              base {liveVideo.severity.base_score?.toFixed(0) ?? "n/a"} · final {liveVideo.severity.final_score?.toFixed(0) ?? liveVideo.severity.score.toFixed(0)}
+              {liveVideo.severity.root_multiplier_applied ? " · root multiplier" : ""}
+              {liveVideo.severity.critical_floor_applied ? " · critical floor" : ""}
             </dd>
           </dl>
         </Section>
 
         <div className="px-6 pb-8">
           <Link
-            to={`/briefing?video=${video.metadata.video_id}`}
+            to={`/briefing?video=${liveVideo.metadata.video_id}`}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md bg-eu-blue text-white font-medium hover:bg-eu-blue/90"
           >
             Generate parliamentary briefing →

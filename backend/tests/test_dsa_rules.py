@@ -5,6 +5,8 @@ from backend.models import (
     AnalyzedVideo,
     Claim,
     ComplianceGap,
+    DerivativeSpread,
+    DerivativeVideoSummary,
     DSATDBCrossReference,
     FactCheckMatch,
     Platform,
@@ -169,3 +171,24 @@ def test_art26_does_not_fire_below_threshold():
     target = _video("a", "@u1", "ro", "ro_election_2024")
     gap = art26_coord.detect(target, [target])
     assert gap is None
+
+
+def test_art26_can_fire_from_derivative_spread_without_cluster():
+    target = _video("a", "@u1", "ro", None)
+    target.derivative_spread = DerivativeSpread(
+        status="complete",
+        provider="demo",
+        audio_id="sound-1",
+        derivative_count=3,
+        aggregate_reach=120000,
+        sample_videos=[
+            DerivativeVideoSummary(video_id="b", url="u", author="@u2", language="de", view_count=1),
+            DerivativeVideoSummary(video_id="c", url="u", author="@u3", language="pl", view_count=1),
+            DerivativeVideoSummary(video_id="d", url="u", author="@u4", language="ro", view_count=1),
+        ],
+        root_proof_status="not_proven",
+    )
+    gap = art26_coord.detect(target, [target])
+    assert gap is not None
+    assert gap.article_ref == "DSA Art. 26"
+    assert gap.evidence["audio_id"] == "sound-1"

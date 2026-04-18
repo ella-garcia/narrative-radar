@@ -33,6 +33,12 @@ def _build_findings(videos: list[AnalyzedVideo]) -> list[str]:
             f"(reach: {v.metadata.view_count:,}; uploaded "
             f"{v.metadata.upload_date.date()}) shows indicators under {gaps}. "
             f"Severity score: {v.severity.score:.0f}/100 ({v.severity.label})."
+            + (
+                f" Derivative spread radius: {v.derivative_spread.derivative_count} "
+                f"video(s), aggregate reach {v.derivative_spread.aggregate_reach:,}."
+                if v.derivative_spread.status == "complete"
+                else ""
+            )
         )
     if not findings:
         findings.append(
@@ -81,6 +87,17 @@ def _build_evidence(videos: list[AnalyzedVideo]) -> list[dict]:
                     }
                     for g in v.compliance_gaps
                 ],
+                "derivative_spread_radius": (
+                    {
+                        "audio_id": v.derivative_spread.audio_id,
+                        "derivative_count": v.derivative_spread.derivative_count,
+                        "aggregate_reach": v.derivative_spread.aggregate_reach,
+                        "root_proof_status": v.derivative_spread.root_proof_status,
+                        "provider": v.derivative_spread.provider,
+                    }
+                    if v.derivative_spread.status == "complete"
+                    else None
+                ),
             }
         )
     return out
@@ -101,6 +118,8 @@ def _executive_summary_template(videos: list[AnalyzedVideo], constituency: str |
     refs_clause = (
         f" with indicators under {', '.join(refs)}" if refs else ""
     )
+    spread = sum(v.derivative_spread.derivative_count for v in videos if v.derivative_spread.status == "complete")
+    spread_reach = sum(v.derivative_spread.aggregate_reach for v in videos if v.derivative_spread.status == "complete")
     return (
         f"This briefing covers {n} short-form video item(s){where}, of which "
         f"{crits} carry high or critical severity{refs_clause}. The findings "
@@ -108,6 +127,12 @@ def _executive_summary_template(videos: list[AnalyzedVideo], constituency: str |
         "the platforms' own DSA Transparency Database submissions. Narrative "
         "Radar does not classify content as disinformation; it identifies "
         "potential platform obligation failures under EU law."
+        + (
+            f" Derivative spread evidence covers {spread} subsequent video(s) "
+            f"with aggregate reach {spread_reach:,}."
+            if spread
+            else ""
+        )
     )
 
 

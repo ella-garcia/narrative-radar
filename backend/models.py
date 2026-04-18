@@ -48,6 +48,10 @@ class VideoMetadata(BaseModel):
     language: str
     has_platform_ai_label: bool = False  # AI Act Art. 50 indicator
     description: str = ""
+    audio_id: str | None = None
+    audio_url: str | None = None
+    lineage_source_kind: Literal["audio", "unknown"] | None = None
+    is_explicit_root_source: bool = False
 
 
 class Claim(BaseModel):
@@ -73,6 +77,42 @@ class Transcript(BaseModel):
     full_text: str
     confidence: Literal["high", "medium", "low"]
     low_confidence_warning: str | None = None
+
+
+class OCRTextBlock(BaseModel):
+    text: str
+    confidence: float | None = None
+    frame_sec: float | None = None
+    source: Literal["demo", "easyocr", "fallback"] = "fallback"
+
+
+class OCRResult(BaseModel):
+    status: Literal["complete", "failed", "skipped"]
+    provider: str
+    blocks: list[OCRTextBlock] = Field(default_factory=list)
+    error: str | None = None
+
+
+class DerivativeVideoSummary(BaseModel):
+    video_id: str
+    url: str
+    author: str
+    title: str | None = None
+    language: str | None = None
+    view_count: int = 0
+    upload_date: datetime | None = None
+    is_source: bool = False
+
+
+class DerivativeSpread(BaseModel):
+    status: Literal["not_applicable", "pending", "complete", "failed"] = "not_applicable"
+    provider: str = "none"
+    audio_id: str | None = None
+    derivative_count: int = 0
+    aggregate_reach: int = 0
+    sample_videos: list[DerivativeVideoSummary] = Field(default_factory=list)
+    root_proof_status: Literal["proven", "not_proven", "not_applicable"] = "not_applicable"
+    error: str | None = None
 
 
 class FactCheckMatch(BaseModel):
@@ -115,6 +155,11 @@ class SeverityScore(BaseModel):
     score: float  # 0..100
     label: Literal["low", "medium", "high", "critical"]
     components: dict  # {reach, recency, signal}
+    base_score: float | None = None
+    final_score: float | None = None
+    root_multiplier_applied: bool = False
+    critical_floor_applied: bool = False
+    lineage_threshold_triggered: bool = False
 
 
 class AnalyzedVideo(BaseModel):
@@ -126,6 +171,10 @@ class AnalyzedVideo(BaseModel):
     compliance_gaps: list[ComplianceGap]
     severity: SeverityScore
     synthetic_media_likelihood: float | None = None  # metadata only, not a gap basis
+    derivative_spread: DerivativeSpread = Field(default_factory=DerivativeSpread)
+    ocr_result: OCRResult = Field(
+        default_factory=lambda: OCRResult(status="skipped", provider="none")
+    )
     cluster_id: str | None = None
     analyzed_at: datetime
     constituency: str | None = None
