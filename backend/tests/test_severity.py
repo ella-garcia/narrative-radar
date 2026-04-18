@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
+from backend.models import DerivativeSpread
 from backend.scoring.severity import score
 
 
@@ -49,4 +50,25 @@ def test_components_sum_to_score():
         + 0.35 * s.components["recency"]
         + 0.20 * s.components["signal"]
     ) * 100
-    assert abs(s.score - expected) < 0.5
+    assert abs((s.base_score or 0) - expected) < 0.5
+
+
+def test_root_multiplier_and_critical_floor_apply_from_lineage():
+    s = score(
+        view_count=5_000,
+        upload_date=datetime.now(tz=timezone.utc) - timedelta(days=1),
+        claim_count=2,
+        match_count=1,
+        derivative_spread=DerivativeSpread(
+            status="complete",
+            provider="demo",
+            audio_id="sound-1",
+            derivative_count=30,
+            aggregate_reach=2_100_000,
+            root_proof_status="proven",
+        ),
+        is_explicit_root_source=True,
+    )
+    assert s.root_multiplier_applied is True
+    assert s.lineage_threshold_triggered is True
+    assert s.score >= 75

@@ -9,6 +9,20 @@ export interface Claim {
   end_sec?: number | null;
 }
 
+export interface OCRTextBlock {
+  text: string;
+  confidence?: number | null;
+  frame_sec?: number | null;
+  source: "demo" | "easyocr" | "fallback";
+}
+
+export interface OCRResult {
+  status: "complete" | "failed" | "skipped";
+  provider: string;
+  blocks: OCRTextBlock[];
+  error?: string | null;
+}
+
 export interface Transcript {
   language: string;
   segments: {
@@ -54,6 +68,11 @@ export interface SeverityScore {
   score: number;
   label: Severity;
   components: { reach: number; recency: number; signal: number };
+  base_score?: number | null;
+  final_score?: number | null;
+  root_multiplier_applied: boolean;
+  critical_floor_applied: boolean;
+  lineage_threshold_triggered: boolean;
 }
 
 export interface VideoMetadata {
@@ -70,6 +89,32 @@ export interface VideoMetadata {
   language: string;
   has_platform_ai_label: boolean;
   description: string;
+  audio_id?: string | null;
+  audio_url?: string | null;
+  lineage_source_kind?: "audio" | "unknown" | null;
+  is_explicit_root_source: boolean;
+}
+
+export interface DerivativeVideoSummary {
+  video_id: string;
+  url: string;
+  author: string;
+  title?: string | null;
+  language?: string | null;
+  view_count: number;
+  upload_date?: string | null;
+  is_source: boolean;
+}
+
+export interface DerivativeSpread {
+  status: "not_applicable" | "pending" | "complete" | "failed";
+  provider: string;
+  audio_id?: string | null;
+  derivative_count: number;
+  aggregate_reach: number;
+  sample_videos: DerivativeVideoSummary[];
+  root_proof_status: "proven" | "not_proven" | "not_applicable";
+  error?: string | null;
 }
 
 export interface AnalyzedVideo {
@@ -81,6 +126,8 @@ export interface AnalyzedVideo {
   compliance_gaps: ComplianceGap[];
   severity: SeverityScore;
   synthetic_media_likelihood?: number | null;
+  derivative_spread: DerivativeSpread;
+  ocr_result: OCRResult;
   cluster_id?: string | null;
   analyzed_at: string;
   constituency?: string | null;

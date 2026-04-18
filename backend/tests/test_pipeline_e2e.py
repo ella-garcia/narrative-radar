@@ -2,7 +2,7 @@
 
 from backend import storage
 from backend.ingest.yt_dlp_wrapper import all_demo_videos
-from backend.pipeline import analyze_url
+from backend.pipeline import analyze_url, enrich_lineage
 
 
 def setup_function(_):
@@ -51,3 +51,23 @@ def test_all_demo_videos_run_without_error():
     for d in all_demo_videos():
         v = analyze_url(d["url"])
         assert v.metadata.video_id == d["video_id"]
+
+
+def test_tiktok_lineage_starts_pending_then_enriches():
+    storage.clear()
+    url = "https://www.tiktok.com/@calingeorgescu_official/video/7438219348761239045"
+    v = analyze_url(url)
+    assert v.derivative_spread.status == "pending"
+    enriched = enrich_lineage(v.metadata.video_id)
+    assert enriched is not None
+    assert enriched.derivative_spread.status == "complete"
+    assert enriched.derivative_spread.derivative_count >= 2
+    assert enriched.severity.final_score is not None
+
+
+def test_ocr_blocks_contribute_to_result():
+    storage.clear()
+    url = "https://www.tiktok.com/@infos_actu_fr/video/7437281904763820145"
+    v = analyze_url(url)
+    assert v.ocr_result.blocks, "expected demo OCR blocks"
+    assert any("article" in c.text.lower() or "capture" in c.text.lower() for c in v.claims)

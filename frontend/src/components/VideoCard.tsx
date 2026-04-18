@@ -36,6 +36,16 @@ export function VideoCard({
                 ⚠ human review required
               </span>
             )}
+            {video.derivative_spread.status === "pending" && (
+              <span className="badge bg-eu-blue/10 text-eu-blue border border-eu-blue/20">
+                lineage pending
+              </span>
+            )}
+            {video.derivative_spread.status === "complete" && (
+              <span className="badge bg-emerald-100 text-emerald-800 border border-emerald-200">
+                spread {video.derivative_spread.derivative_count} · {compactNumber(video.derivative_spread.aggregate_reach)}
+              </span>
+            )}
           </div>
           <h3 className="font-serif font-semibold text-eu-ink text-lg leading-tight truncate">
             {m.title}

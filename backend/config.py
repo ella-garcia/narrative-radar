@@ -46,6 +46,12 @@ class Settings:
     severity_w_recency: float = 0.35
     severity_w_signal: float = 0.20
     severity_recency_halflife_days: float = 14.0
+    severity_root_multiplier: float = 1.5
+    severity_lineage_critical_floor_count: int = 25
+    severity_lineage_critical_floor_reach: int = 1_000_000
+    lineage_match_trigger_threshold: float = 0.40
+    lineage_max_derivatives: int = 50
+    ocr_enabled: bool = True
 
 
 def load() -> Settings:

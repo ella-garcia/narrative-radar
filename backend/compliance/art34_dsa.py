@@ -17,6 +17,7 @@ from pathlib import Path
 
 from ..models import (
     ComplianceGap,
+    DerivativeSpread,
     DSATDBCrossReference,
     FactCheckMatch,
     VideoMetadata,
@@ -70,6 +71,7 @@ def detect(
     metadata: VideoMetadata,
     matches: list[FactCheckMatch],
     cross_refs: list[DSATDBCrossReference],
+    derivative_spread: DerivativeSpread | None = None,
 ) -> ComplianceGap | None:
     if not matches:
         return None
@@ -80,29 +82,42 @@ def detect(
     actions_total = sum(c.similar_actions_count for c in cross_refs)
     severity = "high" if actions_total >= 50_000 else "medium"
 
+    desc = (
+        f"Content semantically matches a fact-check published by "
+        f"{top.source} (similarity {top.similarity:.2f}). The platform's "
+        f"own DSA Transparency Database filings show it has acted "
+        f"{actions_total:,} time(s) on similar content elsewhere. The "
+        "persistence of this specific item may indicate inadequate "
+        "mitigation of the systemic risk under Art. 35."
+    )
+    evidence = {
+        "matched_factcheck_id": top.factcheck_id,
+        "matched_factcheck_url": top.source_url,
+        "similarity": top.similarity,
+        "platform": metadata.platform.value,
+        "view_count": metadata.view_count,
+        "dsa_tdb_actions_taken": actions_total,
+        "dsa_tdb_decision_grounds": [c.sample_decision_ground for c in cross_refs],
+        "scope_note": (
+            "Backed by the platform's own DSA Transparency Database "
+            "submissions, not by Narrative Radar's opinion."
+        ),
+    }
+    if derivative_spread and derivative_spread.status == "complete":
+        desc += (
+            f" Derivative spread radius: {derivative_spread.derivative_count} "
+            f"subsequent video(s), aggregate reach {derivative_spread.aggregate_reach:,}."
+        )
+        evidence["derivative_spread_radius"] = {
+            "audio_id": derivative_spread.audio_id,
+            "derivative_count": derivative_spread.derivative_count,
+            "aggregate_reach": derivative_spread.aggregate_reach,
+        }
+
     return ComplianceGap(
         article_ref="DSA Art. 34-35",
         article_short="Systemic risk — likely inadequate mitigation",
         severity=severity,
-        description=(
-            f"Content semantically matches a fact-check published by "
-            f"{top.source} (similarity {top.similarity:.2f}). The platform's "
-            f"own DSA Transparency Database filings show it has acted "
-            f"{actions_total:,} time(s) on similar content elsewhere. The "
-            "persistence of this specific item may indicate inadequate "
-            "mitigation of the systemic risk under Art. 35."
-        ),
-        evidence={
-            "matched_factcheck_id": top.factcheck_id,
-            "matched_factcheck_url": top.source_url,
-            "similarity": top.similarity,
-            "platform": metadata.platform.value,
-            "view_count": metadata.view_count,
-            "dsa_tdb_actions_taken": actions_total,
-            "dsa_tdb_decision_grounds": [c.sample_decision_ground for c in cross_refs],
-            "scope_note": (
-                "Backed by the platform's own DSA Transparency Database "
-                "submissions, not by Narrative Radar's opinion."
-            ),
-        },
+        description=desc,
+        evidence=evidence,
     )

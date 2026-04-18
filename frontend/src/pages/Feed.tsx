@@ -45,6 +45,14 @@ export function Feed() {
     refresh();
   }, [refresh]);
 
+  useEffect(() => {
+    if (!videos.some((v) => v.derivative_spread.status === "pending")) return;
+    const t = window.setInterval(() => {
+      refresh();
+    }, 4000);
+    return () => window.clearInterval(t);
+  }, [videos, refresh]);
+
   const languages = useMemo(() => {
     const all = new Set<string>();
     videos.forEach((v) => all.add(v.metadata.language));
