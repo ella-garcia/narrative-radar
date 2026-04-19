@@ -23,8 +23,10 @@ Paste a TikTok / YouTube Shorts / Instagram / X URL → Narrative Radar:
    - **AI Act Art. 50 — disclosure-label audit**: when a video carries reasonable indicators of AI involvement but the platform has not surfaced the legally required label. *We never claim a video is AI-generated.*
    - **DSA Art. 34-35 — systemic risk**: when the content matches a documented EDMO narrative AND the platform's own DSA Transparency Database filings show it has acted on similar claims elsewhere. *Backed by the platform's own admissions.*
    - **DSA Art. 26 — coordinated cross-language spread**: when ≥3 distinct accounts post the same narrative within a 7-day window, elevated to *high* when ≥2 languages span. *This is the wow signal — it lights up on the Doppelgänger demo case.*
-6. **Scores severity** (0–100 = log-reach × recency-decay × match-signal).
-7. **Generates a parliamentary briefing** — an EU-styled, printable two-page document with executive summary, findings, cited articles with EUR-Lex links, and an evidence pack.
+6. **Enriches lineage / derivative spread** for demo cases, including reused audio, derivative-video samples, aggregate reach, and a drill-down that separates native reach from cross-platform spread.
+7. **Scores severity** (0–100 = log-reach × recency-decay × match-signal).
+8. **Supports human-gated review** in the evidence modal: approve an item, remove approval, or send it back for additional review with an audit trail.
+9. **Generates a parliamentary briefing** — an EU-styled, printable two-page document with executive summary, findings, cited articles with EUR-Lex links, and an evidence pack.
 
 ## What it is NOT
 
@@ -43,7 +45,7 @@ Paste a TikTok / YouTube Shorts / Instagram / X URL → Narrative Radar:
 | Ingestion | yt-dlp (with pre-cached demo cases) |
 | Frontend | React 18 + TypeScript + Vite + Tailwind + Recharts + react-router |
 | Storage | SQLite-style JSON sidecars (single-process, hackathon-scale) |
-| Tests | 23 pytest tests covering severity scoring, DSA rule engines (Art. 26 / 34-35 / 50), matcher, end-to-end pipeline |
+| Tests | 48 pytest tests covering severity scoring, DSA rule engines (Art. 26 / 34-35 / 50), matcher, provider fallbacks, audit, and end-to-end pipeline |
 
 ## Quick start
 
@@ -56,7 +58,7 @@ cp .env.example .env
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r backend/requirements.txt
-pytest                                              # 30/30 pass
+pytest                                              # 48 passed
 uvicorn backend.main:app --port 8000 --reload
 
 # 2. Frontend (in a second shell)
@@ -86,6 +88,29 @@ responses, a demo ingest, briefing generation, and the Vite root page.
 To manually add offline demo URLs, metadata, OCR, and transcripts, use
 [`docs/DEMO_SEEDING.md`](docs/DEMO_SEEDING.md).
 
+## Product workflow
+
+The frontend is organized around a dashboard, video feed, evidence modal,
+legal-basis reference page, briefing generator, and audit log.
+
+- **Narrative cluster map**: summarizes active narrative clusters by language
+  span, max severity, and total native reach. The overview intentionally stays
+  compact so it remains scannable during a demo.
+- **Evidence modal**: clicking a video opens a centered preview modal that can
+  expand to full screen. The modal contains compliance gaps, derivative spread,
+  extracted claims, OCR, fact-check matches, DSA TDB cross-references,
+  transcript, provenance, and metadata.
+- **Derivative spread drill-down**: when lineage enrichment is complete, the
+  modal shows derivative-video count, aggregate spread, root-proof status, and
+  a reach breakdown: native video reach, cross-platform spread, and combined
+  reach.
+- **Human review actions**: review buttons live inside the modal under
+  **User Actions**. A reviewer can approve an item, remove approval, or mark it
+  as **Sent for Additional Review**. These changes are persisted and recorded in
+  the audit log.
+- **Briefing generation**: reviewers can generate a parliamentary briefing from
+  the modal or briefing page after inspecting the evidence.
+
 ### In VSCode / Cursor
 
 The repo ships `.vscode/launch.json` — open the project, press **F5**, pick
@@ -113,7 +138,7 @@ Each case is real-world grounded in publicly documented incidents (EUvsDisinfo, 
 
 ```
 backend/
-  main.py                        # FastAPI app — 6 endpoints
+  main.py                        # FastAPI app — API endpoints
   pipeline.py                    # URL → AnalyzedVideo orchestrator
   models.py                      # Pydantic wire schema (frontend ↔ backend)
   config.py
@@ -135,7 +160,7 @@ backend/
     demo_videos.json             # 16 pre-cached demo videos
     demo_transcripts/            # optional per-video demo transcripts
     dsa_tdb_seed.json            # subset of EU DSA Transparency DB
-  tests/                         # 23 tests — severity, rules, matcher, e2e
+  tests/                         # 48 tests — severity, rules, matcher, audit, e2e
 frontend/
   src/pages/                     # Dashboard, Feed, Briefing, LegalBasis
   src/components/                # VideoCard, SeverityMeter, ViolationBadge,
