@@ -7,10 +7,7 @@ html, body, #root {
 }
 
 body {
-  background:
-    radial-gradient(circle at 20% 0%, rgba(0, 51, 153, 0.04), transparent 40%),
-    radial-gradient(circle at 100% 20%, rgba(255, 204, 0, 0.05), transparent 35%),
-    #F6F8FB;
+  background: #F6F8FB;
 }
 
 /* Subtle surface */
@@ -199,4 +196,3 @@ body {
   /* Tabular numbers for any monetary/count data */
   .tabular-nums { font-variant-numeric: tabular-nums; }
 }
-
