@@ -12,18 +12,22 @@ from typing import Any
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from . import audit, storage
+from . import audit, shared_briefings, storage
 from .briefing.claude_brief import generate as generate_briefing
 from .compliance.art26_coord import cluster_summary
 from .ingest.yt_dlp_wrapper import all_demo_videos
 from .models import (
     AnalyzedVideo,
+    AgencyContributorRequest,
+    AgencyInputRequest,
     Briefing,
     BriefingRequest,
     DashboardSummary,
     HumanReview,
     IngestRequest,
     NarrativeCluster,
+    SharedBriefing,
+    SharedBriefingUpdate,
 )
 from .pipeline import analyze_url, enrich_lineage
 
@@ -285,6 +289,143 @@ def briefing(
         },
     )
     return b
+
+
+@app.post("/briefing/shared", response_model=SharedBriefing)
+def create_shared_briefing(
+    req: BriefingRequest,
+    x_actor: str | None = Header(default=None),
+    x_role: str | None = Header(default=None),
+) -> SharedBriefing:
+    if req.video_ids:
+        videos = [v for v_id in req.video_ids if (v := storage.get(v_id))]
+    else:
+        videos = sorted(
+            storage.all_videos(), key=lambda v: v.severity.score, reverse=True
+        )[:5]
+    b = generate_briefing(
+        videos, requester=req.requester_name, constituency=req.constituency
+    )
+    shared = shared_briefings.create(
+        briefing=b,
+        source_video_ids=[v.metadata.video_id for v in videos],
+        owner_actor=x_actor or req.requester_name or "anonymous",
+        constituency=req.constituency,
+    )
+    audit.log(
+        actor=x_actor or req.requester_name or "anonymous",
+        role=x_role or "aide",
+        action="shared_briefing_created",
+        detail={
+            "briefing_id": shared.briefing_id,
+            "video_ids": shared.source_video_ids,
+            "constituency": req.constituency,
+            "briefing_hash": b.briefing_hash,
+        },
+    )
+    return shared
+
+
+@app.get("/briefing/shared/{briefing_id}", response_model=SharedBriefing)
+def get_shared_briefing(briefing_id: str) -> SharedBriefing:
+    shared = shared_briefings.get(briefing_id)
+    if not shared:
+        raise HTTPException(status_code=404, detail=f"briefing_id={briefing_id} not found")
+    return shared
+
+
+@app.post("/briefing/shared/{briefing_id}/contributors", response_model=SharedBriefing)
+def add_shared_briefing_contributor(
+    briefing_id: str,
+    req: AgencyContributorRequest,
+    x_actor: str | None = Header(default=None),
+    x_role: str | None = Header(default=None),
+) -> SharedBriefing:
+    if not req.agency_name.strip():
+        raise HTTPException(status_code=400, detail="agency_name is required")
+    shared = shared_briefings.add_contributor(
+        briefing_id,
+        req,
+        invited_by=x_actor or "anonymous",
+    )
+    if not shared:
+        raise HTTPException(status_code=404, detail=f"briefing_id={briefing_id} not found")
+    contributor = shared.contributors[-1]
+    audit.log(
+        actor=x_actor or "anonymous",
+        role=x_role or "aide",
+        action="agency_invited",
+        detail={
+            "briefing_id": briefing_id,
+            "agency_id": contributor.agency_id,
+            "agency_name": contributor.agency_name,
+        },
+    )
+    return shared
+
+
+@app.post("/briefing/shared/{briefing_id}/agency-inputs", response_model=SharedBriefing)
+def add_shared_briefing_agency_input(
+    briefing_id: str,
+    req: AgencyInputRequest,
+    x_actor: str | None = Header(default=None),
+    x_role: str | None = Header(default=None),
+) -> SharedBriefing:
+    if (
+        not req.summary.strip()
+        and not req.case_details.strip()
+        and not req.evidence_notes.strip()
+        and not any(link.strip() for link in req.evidence_links)
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="At least one agency input field is required",
+        )
+    shared, error = shared_briefings.add_agency_input(briefing_id, req)
+    if error == "not_found":
+        raise HTTPException(status_code=404, detail=f"briefing_id={briefing_id} not found")
+    if error == "unauthorized_agency":
+        raise HTTPException(
+            status_code=403,
+            detail="Agency is not authorized for this shared briefing",
+        )
+    assert shared is not None
+    agency_input = shared.agency_inputs[-1]
+    audit.log(
+        actor=x_actor or req.author or agency_input.agency_name,
+        role=x_role or "agency",
+        action="agency_input_added",
+        detail={
+            "briefing_id": briefing_id,
+            "agency_id": agency_input.agency_id,
+            "agency_name": agency_input.agency_name,
+            "input_id": agency_input.input_id,
+            "evidence_links": agency_input.evidence_links,
+        },
+    )
+    return shared
+
+
+@app.patch("/briefing/shared/{briefing_id}", response_model=SharedBriefing)
+def update_shared_briefing(
+    briefing_id: str,
+    req: SharedBriefingUpdate,
+    x_actor: str | None = Header(default=None),
+    x_role: str | None = Header(default=None),
+) -> SharedBriefing:
+    shared = shared_briefings.update_briefing(briefing_id, req.briefing)
+    if not shared:
+        raise HTTPException(status_code=404, detail=f"briefing_id={briefing_id} not found")
+    audit.log(
+        actor=x_actor or "anonymous",
+        role=x_role or "aide",
+        action="shared_briefing_updated",
+        detail={
+            "briefing_id": briefing_id,
+            "briefing_hash": req.briefing.briefing_hash,
+        },
+    )
+    return shared
 
 
 @app.delete("/storage")

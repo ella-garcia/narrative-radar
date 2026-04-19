@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api } from "../lib/api";
-import type { AnalyzedVideo, Briefing as BriefingT } from "../lib/types";
+import type {
+  AgencyInput,
+  AnalyzedVideo,
+  Briefing as BriefingT,
+  SharedBriefing,
+} from "../lib/types";
 import { compactNumber, flag } from "../lib/format";
 
 type EditableBriefing = BriefingT & {
   dsa_tdb_references: DSATDBBriefingReference[];
   user_comments: string;
+  agency_inputs: AgencyInput[];
 };
 
 type DSATDBBriefingReference = {
@@ -17,7 +23,26 @@ type DSATDBBriefingReference = {
   basis: string;
 };
 
-function toEditableBriefing(briefing: BriefingT): EditableBriefing {
+type AgencyContributionDraft = {
+  author: string;
+  summary: string;
+  case_details: string;
+  evidence_links: string;
+  evidence_notes: string;
+};
+
+const EMPTY_AGENCY_DRAFT: AgencyContributionDraft = {
+  author: "",
+  summary: "",
+  case_details: "",
+  evidence_links: "",
+  evidence_notes: "",
+};
+
+function toEditableBriefing(
+  briefing: BriefingT,
+  agencyInputs: AgencyInput[] = [],
+): EditableBriefing {
   const refs = new Map<string, {
     platform: string;
     decision_ground: string;
@@ -57,7 +82,18 @@ function toEditableBriefing(briefing: BriefingT): EditableBriefing {
         "The platform has reported moderation actions under this DSA Transparency Database decision ground on similar content. This is used as an external platform-admission signal, not as a legal determination.",
     })),
     user_comments: "",
+    agency_inputs: agencyInputs,
   };
+}
+
+function toBriefing(briefing: EditableBriefing): BriefingT {
+  const {
+    dsa_tdb_references: _dsaTdbReferences,
+    user_comments: _userComments,
+    agency_inputs: _agencyInputs,
+    ...base
+  } = briefing;
+  return base;
 }
 
 function exportDocx(briefing: EditableBriefing) {
@@ -155,6 +191,20 @@ function createBriefingDocx(briefing: EditableBriefing): Blob {
           )
         : "",
     ]),
+    ...(briefing.agency_inputs.length
+      ? [
+          docxParagraph("Agency Contributions", { heading: true }),
+          ...briefing.agency_inputs.flatMap((input) => [
+            docxParagraph(`${input.agency_name} - ${input.author}`, { bold: true }),
+            docxParagraph(`Summary: ${input.summary}`),
+            input.case_details ? docxParagraph(`Case details: ${input.case_details}`) : "",
+            input.evidence_links.length
+              ? docxParagraph(`Evidence links: ${input.evidence_links.join("; ")}`, { size: 18 })
+              : "",
+            input.evidence_notes ? docxParagraph(`Evidence notes: ${input.evidence_notes}`, { size: 18 }) : "",
+          ]),
+        ]
+      : []),
     docxParagraph("User Comments", { heading: true }),
     docxParagraph(briefing.user_comments || "No user comments added."),
     docxParagraph("Disclaimer", { heading: true }),
@@ -335,11 +385,20 @@ const CRC_TABLE = (() => {
 export function Briefing() {
   const [params] = useSearchParams();
   const initialIds = (params.get("video") ?? "").split(",").filter(Boolean);
+  const sharedId = params.get("shared") ?? "";
+  const agencyId = params.get("agency") ?? "";
   const [videos, setVideos] = useState<AnalyzedVideo[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set(initialIds));
   const [briefing, setBriefing] = useState<BriefingT | null>(null);
   const [editedBriefing, setEditedBriefing] = useState<EditableBriefing | null>(null);
+  const [sharedBriefing, setSharedBriefing] = useState<SharedBriefing | null>(null);
   const [loading, setLoading] = useState(false);
+  const [sharedLoading, setSharedLoading] = useState(false);
+  const [agencyName, setAgencyName] = useState("");
+  const [agencyContact, setAgencyContact] = useState("");
+  const [agencyDraft, setAgencyDraft] = useState<AgencyContributionDraft>(EMPTY_AGENCY_DRAFT);
+  const [agencySubmitted, setAgencySubmitted] = useState(false);
+  const [sharedError, setSharedError] = useState<string | null>(null);
   const [requester, setRequester] = useState("Parliamentary Aide");
   const [constituency, setConstituency] = useState("RO");
 
@@ -348,11 +407,25 @@ export function Briefing() {
   }, []);
 
   useEffect(() => {
-    if (initialIds.length && videos.length && !briefing) {
+    if (!sharedId) return;
+    setSharedLoading(true);
+    api.getSharedBriefing(sharedId)
+      .then((shared) => {
+        setSharedBriefing(shared);
+        setBriefing(shared.briefing);
+        setEditedBriefing(toEditableBriefing(shared.briefing, shared.agency_inputs));
+        setSharedError(null);
+      })
+      .catch((e: any) => setSharedError(e.message))
+      .finally(() => setSharedLoading(false));
+  }, [sharedId]);
+
+  useEffect(() => {
+    if (!sharedId && initialIds.length && videos.length && !briefing) {
       generate();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [videos.length]);
+  }, [videos.length, sharedId]);
 
   async function generate() {
     setLoading(true);
@@ -364,8 +437,94 @@ export function Briefing() {
       });
       setBriefing(b);
       setEditedBriefing(toEditableBriefing(b));
+      setSharedBriefing(null);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function createSharedBriefing() {
+    setLoading(true);
+    try {
+      const shared = await api.createSharedBriefing({
+        video_ids: selected.size ? Array.from(selected) : undefined,
+        constituency,
+        requester_name: requester,
+      });
+      setSharedBriefing(shared);
+      setBriefing(shared.briefing);
+      setEditedBriefing(toEditableBriefing(shared.briefing, shared.agency_inputs));
+      setSharedError(null);
+      window.history.replaceState(null, "", `/briefing?shared=${shared.briefing_id}`);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function addAgencyContributor() {
+    if (!sharedBriefing || !agencyName.trim()) return;
+    setSharedLoading(true);
+    try {
+      const shared = await api.addSharedBriefingContributor(sharedBriefing.briefing_id, {
+        agency_name: agencyName,
+        contact_label: agencyContact,
+      });
+      setSharedBriefing(shared);
+      setEditedBriefing((current) =>
+        current ? { ...current, agency_inputs: shared.agency_inputs } : current,
+      );
+      setAgencyName("");
+      setAgencyContact("");
+      setSharedError(null);
+    } catch (e: any) {
+      setSharedError(e.message);
+    } finally {
+      setSharedLoading(false);
+    }
+  }
+
+  async function saveSharedEdits() {
+    if (!sharedBriefing || !editedBriefing) return;
+    setSharedLoading(true);
+    try {
+      const shared = await api.updateSharedBriefing(
+        sharedBriefing.briefing_id,
+        toBriefing(editedBriefing),
+      );
+      setSharedBriefing(shared);
+      setBriefing(shared.briefing);
+      setEditedBriefing(toEditableBriefing(shared.briefing, shared.agency_inputs));
+      setSharedError(null);
+    } catch (e: any) {
+      setSharedError(e.message);
+    } finally {
+      setSharedLoading(false);
+    }
+  }
+
+  async function submitAgencyInput() {
+    if (!sharedBriefing || !agencyId) return;
+    setSharedLoading(true);
+    try {
+      const agency = sharedBriefing.contributors.find((c) => c.agency_id === agencyId);
+      const shared = await api.addSharedBriefingAgencyInput(sharedBriefing.briefing_id, {
+        agency_id: agencyId,
+        author: agencyDraft.author || agency?.contact_label || agency?.agency_name || "Agency reviewer",
+        summary: agencyDraft.summary,
+        case_details: agencyDraft.case_details,
+        evidence_links: agencyDraft.evidence_links.split(/\n+/).map((l) => l.trim()).filter(Boolean),
+        evidence_notes: agencyDraft.evidence_notes,
+      });
+      setSharedBriefing(shared);
+      setBriefing(shared.briefing);
+      setEditedBriefing(toEditableBriefing(shared.briefing, shared.agency_inputs));
+      setAgencyDraft(EMPTY_AGENCY_DRAFT);
+      setAgencySubmitted(true);
+      setSharedError(null);
+    } catch (e: any) {
+      setSharedError(e.message);
+    } finally {
+      setSharedLoading(false);
     }
   }
 
@@ -410,13 +569,22 @@ export function Briefing() {
             </select>
           </label>
           <div className="flex items-end">
-            <button
-              onClick={generate}
-              disabled={loading}
-              className="px-4 py-2 rounded-md bg-eu-blue text-white text-sm font-medium hover:bg-eu-blue/90 disabled:opacity-50 w-full md:w-auto"
-            >
-              {loading ? "Generating…" : "Generate briefing"}
-            </button>
+            <div className="flex w-full flex-wrap gap-2">
+              <button
+                onClick={generate}
+                disabled={loading}
+                className="px-4 py-2 rounded-md bg-eu-blue text-white text-sm font-medium hover:bg-eu-blue/90 disabled:opacity-50"
+              >
+                {loading ? "Generating…" : "Generate briefing"}
+              </button>
+              <button
+                onClick={createSharedBriefing}
+                disabled={loading}
+                className="px-4 py-2 rounded-md border border-eu-blue/30 bg-eu-blue/5 text-sm font-medium text-eu-blue hover:bg-eu-blue/10 disabled:opacity-50"
+              >
+                Create shared briefing
+              </button>
+            </div>
           </div>
         </div>
         <div className="mt-4">
@@ -452,8 +620,40 @@ export function Briefing() {
         </div>
       </div>
 
+      {sharedLoading && (
+        <div className="surface p-4 text-sm text-eu-slate-600">
+          Updating shared briefing…
+        </div>
+      )}
+
+      {sharedError && (
+        <div className="surface p-4 text-sm text-sev-critical">
+          {sharedError}
+        </div>
+      )}
+
       {briefing && editedBriefing && (
         <div className="space-y-4">
+          {sharedBriefing && agencyId && (
+            <AgencyContributionPanel
+              sharedBriefing={sharedBriefing}
+              agencyId={agencyId}
+              draft={agencyDraft}
+              submitted={agencySubmitted}
+              onChange={setAgencyDraft}
+              onSubmit={submitAgencyInput}
+            />
+          )}
+          {sharedBriefing && !agencyId && (
+            <SharedBriefingPanel
+              sharedBriefing={sharedBriefing}
+              agencyName={agencyName}
+              agencyContact={agencyContact}
+              onAgencyNameChange={setAgencyName}
+              onAgencyContactChange={setAgencyContact}
+              onAddAgency={addAgencyContributor}
+            />
+          )}
           <div className="mx-auto flex max-w-[984px] flex-wrap items-center justify-between gap-3 print:hidden">
             <div className="surface-tight flex min-h-10 flex-wrap items-center gap-3 border-eu-blue/30 bg-eu-blue/5 px-4 py-2 text-sm text-eu-ink">
               <span className="rounded bg-eu-blue px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">
@@ -476,6 +676,14 @@ export function Briefing() {
               >
                 Export DOCX
               </button>
+              {sharedBriefing && !agencyId && (
+                <button
+                  onClick={saveSharedEdits}
+                  className="text-xs px-3 py-1.5 border border-eu-blue/30 bg-eu-blue/5 text-eu-blue rounded-md hover:bg-eu-blue/10"
+                >
+                  Save shared edits
+                </button>
+              )}
             </div>
           </div>
           <BriefingDocument
@@ -485,6 +693,224 @@ export function Briefing() {
         </div>
       )}
     </div>
+  );
+}
+
+function SharedBriefingPanel({
+  sharedBriefing,
+  agencyName,
+  agencyContact,
+  onAgencyNameChange,
+  onAgencyContactChange,
+  onAddAgency,
+}: {
+  sharedBriefing: SharedBriefing;
+  agencyName: string;
+  agencyContact: string;
+  onAgencyNameChange: (value: string) => void;
+  onAgencyContactChange: (value: string) => void;
+  onAddAgency: () => void;
+}) {
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const ownerPath = `/briefing?shared=${sharedBriefing.briefing_id}`;
+
+  return (
+    <section className="surface mx-auto max-w-[984px] p-5 print:hidden">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="section-heading mb-1">Authorized agency input</div>
+          <h2 className="font-serif text-xl font-semibold text-eu-ink">
+            Shared policy briefing
+          </h2>
+          <p className="mt-1 text-sm text-eu-slate-600">
+            Invite authorized agencies to add evidence or case details. Their
+            submissions are additive, attributed, and included in the briefing export.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => navigator.clipboard.writeText(`${origin}${ownerPath}`)}
+          className="text-xs px-3 py-1.5 border border-eu-slate-200 rounded-md hover:bg-eu-slate-50"
+        >
+          Copy owner link
+        </button>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto]">
+        <label className="flex flex-col gap-1">
+          <span className="text-[10px] uppercase tracking-wider text-eu-slate-500">
+            Agency name
+          </span>
+          <input
+            value={agencyName}
+            onChange={(e) => onAgencyNameChange(e.target.value)}
+            placeholder="e.g. EDMO Hub, national regulator"
+            className="select"
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-[10px] uppercase tracking-wider text-eu-slate-500">
+            Contact label
+          </span>
+          <input
+            value={agencyContact}
+            onChange={(e) => onAgencyContactChange(e.target.value)}
+            placeholder="analyst name or mailbox"
+            className="select"
+          />
+        </label>
+        <div className="flex items-end">
+          <button
+            type="button"
+            onClick={onAddAgency}
+            disabled={!agencyName.trim()}
+            className="px-4 py-2 rounded-md bg-eu-blue text-sm font-medium text-white hover:bg-eu-blue/90 disabled:opacity-50"
+          >
+            Add agency
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-4 space-y-2">
+        {sharedBriefing.contributors.length === 0 ? (
+          <div className="surface-tight p-3 text-sm text-eu-slate-500">
+            No agencies invited yet.
+          </div>
+        ) : (
+          sharedBriefing.contributors.map((agency) => {
+            const path = `/briefing?shared=${sharedBriefing.briefing_id}&agency=${agency.agency_id}`;
+            return (
+              <div
+                key={agency.agency_id}
+                className="surface-tight flex flex-wrap items-center justify-between gap-3 p-3 text-sm"
+              >
+                <div>
+                  <div className="font-semibold text-eu-ink">{agency.agency_name}</div>
+                  <div className="text-xs text-eu-slate-500">
+                    {agency.contact_label || "No contact label"} · {agency.status}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigator.clipboard.writeText(`${origin}${path}`)}
+                  className="text-xs px-3 py-1.5 border border-eu-slate-200 rounded-md hover:bg-eu-slate-50"
+                >
+                  Copy agency link
+                </button>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </section>
+  );
+}
+
+function AgencyContributionPanel({
+  sharedBriefing,
+  agencyId,
+  draft,
+  submitted,
+  onChange,
+  onSubmit,
+}: {
+  sharedBriefing: SharedBriefing;
+  agencyId: string;
+  draft: AgencyContributionDraft;
+  submitted: boolean;
+  onChange: (draft: AgencyContributionDraft) => void;
+  onSubmit: () => void;
+}) {
+  const agency = sharedBriefing.contributors.find((c) => c.agency_id === agencyId);
+
+  if (!agency) {
+    return (
+      <section className="surface mx-auto max-w-[984px] p-5 text-sm text-sev-critical print:hidden">
+        This agency link is not authorized for the shared briefing.
+      </section>
+    );
+  }
+
+  return (
+    <section className="surface mx-auto max-w-[984px] p-5 print:hidden">
+      <div className="mb-4">
+        <div className="section-heading mb-1">Agency contribution</div>
+        <h2 className="font-serif text-xl font-semibold text-eu-ink">
+          Add input as {agency.agency_name}
+        </h2>
+        <p className="mt-1 text-sm text-eu-slate-600">
+          Additive evidence and case details will be attributed to this agency
+          and included in the policy briefing export.
+        </p>
+      </div>
+      {submitted && (
+        <div className="mb-4 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+          Contribution submitted and added to the shared briefing.
+        </div>
+      )}
+      <div className="grid gap-3">
+        <label className="flex flex-col gap-1">
+          <span className="text-[10px] uppercase tracking-wider text-eu-slate-500">
+            Author
+          </span>
+          <input
+            value={draft.author}
+            onChange={(e) => onChange({ ...draft, author: e.target.value })}
+            placeholder={agency.contact_label || agency.agency_name}
+            className="select"
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-[10px] uppercase tracking-wider text-eu-slate-500">
+            Agency summary
+          </span>
+          <textarea
+            value={draft.summary}
+            onChange={(e) => onChange({ ...draft, summary: e.target.value })}
+            className="select min-h-24 resize-y"
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-[10px] uppercase tracking-wider text-eu-slate-500">
+            Case details
+          </span>
+          <textarea
+            value={draft.case_details}
+            onChange={(e) => onChange({ ...draft, case_details: e.target.value })}
+            className="select min-h-24 resize-y"
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-[10px] uppercase tracking-wider text-eu-slate-500">
+            Evidence links, one per line
+          </span>
+          <textarea
+            value={draft.evidence_links}
+            onChange={(e) => onChange({ ...draft, evidence_links: e.target.value })}
+            className="select min-h-20 resize-y font-mono text-xs"
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-[10px] uppercase tracking-wider text-eu-slate-500">
+            Evidence notes
+          </span>
+          <textarea
+            value={draft.evidence_notes}
+            onChange={(e) => onChange({ ...draft, evidence_notes: e.target.value })}
+            className="select min-h-20 resize-y"
+          />
+        </label>
+        <div>
+          <button
+            type="button"
+            onClick={onSubmit}
+            className="px-4 py-2 rounded-md bg-eu-blue text-sm font-medium text-white hover:bg-eu-blue/90"
+          >
+            Submit agency input
+          </button>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -845,6 +1271,74 @@ function BriefingDocument({
             </div>
           </Section>
         </div>
+
+        {briefing.agency_inputs.length > 0 && (
+          <div className="briefing-section">
+            <Section title="Agency contributions">
+              <div className="space-y-3">
+                {briefing.agency_inputs.map((input) => (
+                  <div
+                    key={input.input_id}
+                    className="briefing-evidence-item surface-tight font-sans p-4 text-sm"
+                  >
+                    <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+                      <div>
+                        <div className="font-semibold text-eu-ink">
+                          {input.agency_name}
+                        </div>
+                        <div className="text-xs text-eu-slate-500">
+                          Submitted by {input.author}
+                        </div>
+                      </div>
+                      <span className="chip">External agency input</span>
+                    </div>
+                    {input.summary && (
+                      <div className="mb-2">
+                        <div className="text-[10px] font-semibold uppercase tracking-wider text-eu-slate-500">
+                          Summary
+                        </div>
+                        <p className="mt-1 whitespace-pre-wrap text-sm text-eu-slate-700">
+                          {input.summary}
+                        </p>
+                      </div>
+                    )}
+                    {input.case_details && (
+                      <div className="mb-2">
+                        <div className="text-[10px] font-semibold uppercase tracking-wider text-eu-slate-500">
+                          Case details
+                        </div>
+                        <p className="mt-1 whitespace-pre-wrap text-sm text-eu-slate-700">
+                          {input.case_details}
+                        </p>
+                      </div>
+                    )}
+                    {input.evidence_links.length > 0 && (
+                      <div className="mb-2 text-xs">
+                        <span className="font-semibold">Evidence links:</span>{" "}
+                        {input.evidence_links.map((link) => (
+                          <a
+                            key={link}
+                            href={link}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mr-2 break-all text-eu-blue underline"
+                          >
+                            {link}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                    {input.evidence_notes && (
+                      <p className="whitespace-pre-wrap text-xs text-eu-slate-600">
+                        {input.evidence_notes}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </Section>
+          </div>
+        )}
 
         <div className="briefing-section mt-8 pt-4 border-t border-eu-slate-200 text-[11px] text-eu-slate-500 italic">
           <EditableText

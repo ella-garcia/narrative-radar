@@ -84,6 +84,31 @@ export const api = {
             requester_name: opts.requester_name,
         }),
     }).then((r) => j(r)),
+    createSharedBriefing: (opts) => fetch(`${BASE}/briefing/shared`, {
+        method: "POST",
+        headers: authHeaders({ "content-type": "application/json" }),
+        body: JSON.stringify({
+            video_ids: opts.video_ids ?? [],
+            constituency: opts.constituency,
+            requester_name: opts.requester_name,
+        }),
+    }).then((r) => j(r)),
+    getSharedBriefing: (id) => fetch(`${BASE}/briefing/shared/${id}`).then((r) => j(r)),
+    addSharedBriefingContributor: (id, opts) => fetch(`${BASE}/briefing/shared/${id}/contributors`, {
+        method: "POST",
+        headers: authHeaders({ "content-type": "application/json" }),
+        body: JSON.stringify(opts),
+    }).then((r) => j(r)),
+    addSharedBriefingAgencyInput: (id, input) => fetch(`${BASE}/briefing/shared/${id}/agency-inputs`, {
+        method: "POST",
+        headers: authHeaders({ "content-type": "application/json", "X-Role": "agency" }),
+        body: JSON.stringify(input),
+    }).then((r) => j(r)),
+    updateSharedBriefing: (id, briefing) => fetch(`${BASE}/briefing/shared/${id}`, {
+        method: "PATCH",
+        headers: authHeaders({ "content-type": "application/json" }),
+        body: JSON.stringify({ briefing }),
+    }).then((r) => j(r)),
     clear: () => fetch(`${BASE}/storage`, {
         method: "DELETE",
         headers: authHeaders(),

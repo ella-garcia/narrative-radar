@@ -203,6 +203,41 @@ export interface Briefing {
   briefing_hash?: string | null;
 }
 
+export interface AgencyContributor {
+  agency_id: string;
+  agency_name: string;
+  contact_label?: string | null;
+  status: "invited" | "active" | "submitted";
+  invited_at: string;
+  invited_by: string;
+}
+
+export interface AgencyInput {
+  input_id: string;
+  agency_id: string;
+  agency_name: string;
+  author: string;
+  summary: string;
+  case_details: string;
+  evidence_links: string[];
+  evidence_notes: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SharedBriefing {
+  briefing_id: string;
+  briefing: Briefing;
+  source_video_ids: string[];
+  owner_actor: string;
+  constituency?: string | null;
+  status: "draft" | "shared" | "closed";
+  contributors: AgencyContributor[];
+  agency_inputs: AgencyInput[];
+  created_at: string;
+  updated_at: string;
+}
+
 export interface LegalRefs {
   [ref: string]: {
     short: string;
