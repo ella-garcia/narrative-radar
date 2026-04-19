@@ -38,6 +38,22 @@ export function Dashboard() {
     return () => window.clearInterval(t);
   }, [data, refresh]);
 
+  function updateVideo(updated: AnalyzedVideo) {
+    setData((current) =>
+      current
+        ? {
+            ...current,
+            top_threats: current.top_threats.map((v) =>
+              v.metadata.video_id === updated.metadata.video_id ? updated : v,
+            ),
+          }
+        : current,
+    );
+    setOpen((current) =>
+      current?.metadata.video_id === updated.metadata.video_id ? updated : current,
+    );
+  }
+
   if (error) {
     return (
       <div className="surface p-6 text-sev-critical">
@@ -185,7 +201,6 @@ export function Dashboard() {
                   key={v.metadata.video_id}
                   video={v}
                   onOpen={() => setOpen(v)}
-                  onApproved={refresh}
                 />
               ))}
             </div>
@@ -195,7 +210,13 @@ export function Dashboard() {
         <div className="text-eu-slate-500 text-sm">Loading…</div>
       )}
 
-      {open && <VideoDetailDrawer video={open} onClose={() => setOpen(null)} />}
+      {open && (
+        <VideoDetailDrawer
+          video={open}
+          onClose={() => setOpen(null)}
+          onReviewUpdated={updateVideo}
+        />
+      )}
     </div>
   );
 }

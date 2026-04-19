@@ -163,13 +163,18 @@ export function Feed() {
               key={v.metadata.video_id}
               video={v}
               onOpen={() => setOpen(v)}
-              onApproved={updateVideo}
             />
           ))}
         </div>
       )}
 
-      {open && <VideoDetailDrawer video={open} onClose={() => setOpen(null)} />}
+      {open && (
+        <VideoDetailDrawer
+          video={open}
+          onClose={() => setOpen(null)}
+          onReviewUpdated={updateVideo}
+        />
+      )}
     </div>
   );
 }

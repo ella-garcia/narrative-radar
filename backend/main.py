@@ -209,6 +209,34 @@ def approve_video(
     return approved
 
 
+@app.post("/videos/{video_id}/additional-review", response_model=AnalyzedVideo)
+def send_video_for_additional_review(
+    video_id: str,
+    x_actor: str | None = Header(default=None),
+    x_role: str | None = Header(default=None),
+) -> AnalyzedVideo:
+    v = storage.get(video_id)
+    if not v:
+        raise HTTPException(status_code=404, detail=f"video_id={video_id} not found")
+    updated = v.model_copy(
+        update={
+            "human_review": HumanReview(
+                status="additional_review",
+                approved_by=None,
+                approved_at=None,
+            )
+        }
+    )
+    storage.upsert(updated)
+    audit.log(
+        actor=x_actor or "anonymous",
+        role=x_role or "aide",
+        action="video_additional_review",
+        detail={"video_id": video_id},
+    )
+    return updated
+
+
 @app.get("/dashboard", response_model=DashboardSummary)
 def dashboard() -> DashboardSummary:
     videos = storage.all_videos()

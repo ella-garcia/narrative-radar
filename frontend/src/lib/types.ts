@@ -85,7 +85,7 @@ export interface SeverityScore {
 }
 
 export interface HumanReview {
-  status: "pending" | "approved";
+  status: "pending" | "approved" | "additional_review";
   approved_by?: string | null;
   approved_at?: string | null;
 }

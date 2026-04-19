@@ -98,6 +98,12 @@ export const api = {
       headers: authHeaders(),
     }).then((r) => j<AnalyzedVideo>(r)),
 
+  sendForAdditionalReview: (id: string) =>
+    fetch(`${BASE}/videos/${id}/additional-review`, {
+      method: "POST",
+      headers: authHeaders(),
+    }).then((r) => j<AnalyzedVideo>(r)),
+
   dashboard: () =>
     fetch(`${BASE}/dashboard`).then((r) => j<DashboardSummary>(r)),
 

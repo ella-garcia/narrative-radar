@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import { api } from "../lib/api";
 import type { AnalyzedVideo } from "../lib/types";
@@ -20,14 +21,19 @@ const CATEGORY_PALETTE: Record<string, string> = {
 export function VideoDetailDrawer({
   video,
   onClose,
+  onReviewUpdated,
 }: {
   video: AnalyzedVideo;
   onClose: () => void;
+  onReviewUpdated?: (video: AnalyzedVideo) => void;
 }) {
   const [liveVideo, setLiveVideo] = useState(video);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isReviewing, setIsReviewing] = useState(false);
 
   useEffect(() => {
     setLiveVideo(video);
+    setIsFullScreen(false);
   }, [video]);
 
   useEffect(() => {
@@ -62,16 +68,46 @@ export function VideoDetailDrawer({
   const m = liveVideo.metadata;
   const synth = liveVideo.synthetic_media_likelihood;
   const lowConf = liveVideo.transcript.confidence !== "high";
+  const approved = liveVideo.human_review.status === "approved";
+  const sentForAdditionalReview = liveVideo.human_review.status === "additional_review";
+  const crossPlatformReach =
+    liveVideo.derivative_spread.status === "complete"
+      ? liveVideo.derivative_spread.aggregate_reach
+      : 0;
+  const combinedReach = m.view_count + crossPlatformReach;
 
-  return (
-    <div className="fixed inset-0 z-50 flex justify-end" onClick={onClose}>
-      <div className="absolute inset-0 bg-eu-ink/40" />
+  async function updateReviewStatus(nextStatus: "approved" | "additional_review") {
+    setIsReviewing(true);
+    try {
+      const updated =
+        nextStatus === "approved"
+          ? await api.approveVideo(m.video_id)
+          : await api.sendForAdditionalReview(m.video_id);
+      setLiveVideo(updated);
+      onReviewUpdated?.(updated);
+    } finally {
+      setIsReviewing(false);
+    }
+  }
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+      <button
+        type="button"
+        aria-label="Close video details"
+        className="fixed inset-0 h-screen w-screen cursor-default bg-eu-ink/45"
+        onClick={onClose}
+      />
       <aside
-        onClick={(e) => e.stopPropagation()}
-        className="relative w-[640px] max-w-full h-full bg-eu-slate-50 overflow-y-auto shadow-2xl"
+        aria-modal="true"
+        role="dialog"
+        className={`relative flex flex-col overflow-hidden bg-eu-slate-50 shadow-2xl ${
+          isFullScreen
+            ? "h-screen w-screen rounded-none"
+            : "max-h-[calc(100vh-2rem)] w-[min(911px,calc(100vw-2rem))] rounded-lg"
+        }`}
       >
-        {/* Sticky header */}
-        <div className="sticky top-0 bg-white border-b border-eu-slate-200 px-6 py-4 z-10">
+        <div className="shrink-0 bg-white border-b border-eu-slate-200 px-6 py-4 z-10">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-1.5 mb-1">
@@ -90,12 +126,25 @@ export function VideoDetailDrawer({
                 {m.author} · {compactNumber(m.view_count)} views · {relativeDate(m.upload_date)}
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="text-eu-slate-500 hover:text-eu-ink p-1 rounded hover:bg-eu-slate-100"
-            >
-              ✕
-            </button>
+            <div className="flex shrink-0 items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setIsFullScreen((current) => !current)}
+                aria-label={isFullScreen ? "Exit full screen preview" : "Expand to full screen"}
+                title={isFullScreen ? "Exit full screen" : "Full screen"}
+                className="grid h-8 w-8 place-items-center rounded text-eu-slate-500 hover:bg-eu-slate-100 hover:text-eu-ink"
+              >
+                {isFullScreen ? "↙" : "↗"}
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close video details"
+                className="grid h-8 w-8 place-items-center rounded text-eu-slate-500 hover:bg-eu-slate-100 hover:text-eu-ink"
+              >
+                ✕
+              </button>
+            </div>
           </div>
           <div className="mt-3">
             <SeverityMeter
@@ -104,15 +153,38 @@ export function VideoDetailDrawer({
               details={liveVideo.severity}
             />
           </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span
+              className={`badge border ${
+                approved
+                  ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                  : sentForAdditionalReview
+                    ? "bg-blue-100 text-blue-800 border-blue-200"
+                    : "bg-amber-100 text-amber-800 border-amber-200"
+              }`}
+            >
+              {approved
+                ? "Approved"
+                : sentForAdditionalReview
+                  ? "Sent for Additional Review"
+                  : "Human Review Pending"}
+            </span>
+            {approved && liveVideo.human_review.approved_by && (
+              <span className="text-xs text-eu-slate-500">
+                by {liveVideo.human_review.approved_by}
+              </span>
+            )}
+          </div>
         </div>
 
-        {lowConf && (
-          <div className="mx-6 mt-4 surface-tight bg-amber-50 border-amber-200 px-4 py-3 text-sm text-amber-900">
-            ⚠ <strong>Human review required.</strong>{" "}
-            {liveVideo.transcript.low_confidence_warning ??
-              `ASR + LLM confidence is ${liveVideo.transcript.confidence}.`}
-          </div>
-        )}
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          {lowConf && (
+            <div className="mx-6 mt-4 surface-tight bg-amber-50 border-amber-200 px-4 py-3 text-sm text-amber-900">
+              ⚠ <strong>Human review required.</strong>{" "}
+              {liveVideo.transcript.low_confidence_warning ??
+                `ASR + LLM confidence is ${liveVideo.transcript.confidence}.`}
+            </div>
+          )}
 
         <Section title="Compliance gap indicators">
           {liveVideo.compliance_gaps.length === 0 ? (
@@ -162,6 +234,23 @@ export function VideoDetailDrawer({
                   <span><strong>{compactNumber(liveVideo.derivative_spread.aggregate_reach)}</strong> aggregate reach</span>
                   <span>root proof: <strong>{liveVideo.derivative_spread.root_proof_status}</strong></span>
                 </div>
+                {crossPlatformReach > 0 && (
+                  <div className="mt-4 grid gap-2 border-t border-eu-slate-100 pt-3 sm:grid-cols-3">
+                    <ReachMetric
+                      label="Native video reach"
+                      value={m.view_count}
+                    />
+                    <ReachMetric
+                      label="Cross-platform spread"
+                      value={crossPlatformReach}
+                    />
+                    <ReachMetric
+                      label="Combined reach"
+                      value={combinedReach}
+                      emphasized
+                    />
+                  </div>
+                )}
                 {liveVideo.derivative_spread.audio_id && (
                   <div className="mt-2 text-xs text-eu-slate-500 font-mono">
                     audio_id {liveVideo.derivative_spread.audio_id}
@@ -326,16 +415,43 @@ export function VideoDetailDrawer({
           </dl>
         </Section>
 
-        <div className="px-6 pb-8">
-          <Link
-            to={`/briefing?video=${liveVideo.metadata.video_id}`}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md bg-eu-blue text-white font-medium hover:bg-eu-blue/90"
-          >
-            Generate parliamentary briefing →
-          </Link>
+          <div className="mx-6 mt-6 border-t border-eu-slate-200 pt-4">
+            <h3 className="section-heading mb-3">User Actions</h3>
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-3 px-6 pb-8">
+            <div className="flex flex-wrap items-center gap-2">
+              {!approved && (
+                <button
+                  type="button"
+                  disabled={isReviewing}
+                  onClick={() => updateReviewStatus("approved")}
+                  className="inline-flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-800 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Approve
+                </button>
+              )}
+              {approved && (
+                <button
+                  type="button"
+                  disabled={isReviewing}
+                  onClick={() => updateReviewStatus("additional_review")}
+                  className="inline-flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-medium text-blue-800 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Remove approval
+                </button>
+              )}
+            </div>
+            <Link
+              to={`/briefing?video=${liveVideo.metadata.video_id}`}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md bg-eu-blue text-white font-medium hover:bg-eu-blue/90"
+            >
+              Generate parliamentary briefing →
+            </Link>
+          </div>
         </div>
       </aside>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -344,6 +460,31 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     <div className="px-6 mt-6">
       <h3 className="section-heading mb-2">{title}</h3>
       {children}
+    </div>
+  );
+}
+
+function ReachMetric({
+  label,
+  value,
+  emphasized = false,
+}: {
+  label: string;
+  value: number;
+  emphasized?: boolean;
+}) {
+  return (
+    <div className="rounded-md bg-eu-slate-50 px-3 py-2">
+      <div className="text-[10px] uppercase tracking-wider text-eu-slate-500">
+        {label}
+      </div>
+      <div
+        className={`mt-0.5 font-serif text-lg font-semibold tabular-nums ${
+          emphasized ? "text-eu-blue" : "text-eu-ink"
+        }`}
+      >
+        {compactNumber(value)}
+      </div>
     </div>
   );
 }

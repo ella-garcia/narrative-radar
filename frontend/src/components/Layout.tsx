@@ -55,7 +55,7 @@ export function Layout() {
       <footer className="max-w-[1280px] mx-auto px-6 py-8 mt-8 border-t border-eu-slate-200 text-xs text-eu-slate-500">
         <div className="flex flex-wrap justify-between gap-3">
           <div>
-            Narrative Radar — EU AI Hackathon 2026, Topic C. Built for parliamentary offices.
+            Narrative Radar — EU AI Hackathon 2026.
           </div>
           <div className="flex gap-3">
             <span>Data: EUvsDisinfo · EDMO · DSA Transparency DB</span>

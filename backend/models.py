@@ -172,7 +172,7 @@ class SeverityScore(BaseModel):
 
 
 class HumanReview(BaseModel):
-    status: Literal["pending", "approved"] = "pending"
+    status: Literal["pending", "approved", "additional_review"] = "pending"
     approved_by: str | None = None
     approved_at: datetime | None = None
 

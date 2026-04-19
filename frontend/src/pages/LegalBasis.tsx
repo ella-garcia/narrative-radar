@@ -9,7 +9,7 @@ export function LegalBasis() {
   }, []);
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="flex w-full flex-col gap-6">
       <div>
         <h1 className="font-serif text-2xl text-eu-ink font-semibold">Legal basis</h1>
         <p className="text-sm text-eu-slate-500 mt-0.5">
