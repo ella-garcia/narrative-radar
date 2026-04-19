@@ -5,6 +5,7 @@ const NAV = [
     { to: "/", label: "Dashboard" },
     { to: "/feed", label: "Video feed" },
     { to: "/briefing", label: "Briefings" },
+    { to: "/forensics", label: "Forensics" },
     { to: "/audit", label: "Audit log" },
 ];
 const DOC_NAV = [

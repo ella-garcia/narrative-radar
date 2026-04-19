@@ -5,7 +5,10 @@ import type {
   Briefing,
   DashboardSummary,
   DemoVideo,
+  ForensicAccountSummary,
+  ForensicProfile,
   LegalRefs,
+  NarrativeTrendPoint,
   SharedBriefing,
 } from "./types";
 
@@ -108,6 +111,17 @@ export const api = {
 
   dashboard: () =>
     fetch(`${BASE}/dashboard`).then((r) => j<DashboardSummary>(r)),
+
+  forensicAccounts: () =>
+    fetch(`${BASE}/forensics/accounts`).then((r) => j<ForensicAccountSummary[]>(r)),
+
+  forensicProfile: (handle: string) =>
+    fetch(`${BASE}/forensics/accounts/${encodeURIComponent(handle)}`).then((r) =>
+      j<ForensicProfile>(r),
+    ),
+
+  forensicTrends: () =>
+    fetch(`${BASE}/forensics/trends`).then((r) => j<NarrativeTrendPoint[]>(r)),
 
   briefing: (opts: {
     video_ids?: string[];

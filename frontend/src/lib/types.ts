@@ -168,6 +168,54 @@ export interface DashboardSummary {
   clusters: NarrativeCluster[];
 }
 
+export interface AmplificationEdge {
+  source_handle: string;
+  related_handle: string;
+  relation_type: string;
+  shared_evidence: Record<string, any>;
+}
+
+export interface ForensicSignal {
+  signal_type: string;
+  severity: "informational" | "low" | "medium" | "high";
+  title: string;
+  description: string;
+  evidence: Record<string, any>;
+  caveat: string;
+}
+
+export interface ForensicAccountSummary {
+  handle: string;
+  platforms: string[];
+  video_count: number;
+  languages: string[];
+  first_observed_upload?: string | null;
+  last_observed_upload?: string | null;
+  total_reach: number;
+  known_clusters: string[];
+}
+
+export interface ForensicProfile {
+  summary: ForensicAccountSummary;
+  posting_cadence: Record<string, number>;
+  hashtag_counts: Record<string, number>;
+  narrative_clusters: Record<string, number>;
+  engagement_stats: Record<string, any>;
+  amplification_edges: AmplificationEdge[];
+  signals: ForensicSignal[];
+  missing_data_notes: string[];
+}
+
+export interface NarrativeTrendPoint {
+  date_bucket: string;
+  cluster_id?: string | null;
+  language?: string | null;
+  hashtag?: string | null;
+  video_count: number;
+  total_reach: number;
+  handles: string[];
+}
+
 export interface DemoVideo {
   video_id: string;
   url: string;

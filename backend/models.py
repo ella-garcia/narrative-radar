@@ -220,6 +220,57 @@ class DashboardSummary(BaseModel):
     clusters: list[NarrativeCluster]
 
 
+class AmplificationEdge(BaseModel):
+    source_handle: str
+    related_handle: str
+    relation_type: str
+    shared_evidence: dict
+
+
+class ForensicSignal(BaseModel):
+    signal_type: str
+    severity: Literal["informational", "low", "medium", "high"]
+    title: str
+    description: str
+    evidence: dict
+    caveat: str = (
+        "Investigative signal only. Does not identify a bot, coordinated actor, "
+        "or legal violation without human review."
+    )
+
+
+class ForensicAccountSummary(BaseModel):
+    handle: str
+    platforms: list[str]
+    video_count: int
+    languages: list[str]
+    first_observed_upload: datetime | None = None
+    last_observed_upload: datetime | None = None
+    total_reach: int
+    known_clusters: list[str]
+
+
+class ForensicProfile(BaseModel):
+    summary: ForensicAccountSummary
+    posting_cadence: dict[str, int]
+    hashtag_counts: dict[str, int]
+    narrative_clusters: dict[str, int]
+    engagement_stats: dict
+    amplification_edges: list[AmplificationEdge]
+    signals: list[ForensicSignal]
+    missing_data_notes: list[str]
+
+
+class NarrativeTrendPoint(BaseModel):
+    date_bucket: str
+    cluster_id: str | None = None
+    language: str | None = None
+    hashtag: str | None = None
+    video_count: int
+    total_reach: int
+    handles: list[str]
+
+
 class BriefingRequest(BaseModel):
     video_ids: list[str]
     constituency: str | None = None

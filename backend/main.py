@@ -12,7 +12,7 @@ from typing import Any
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from . import audit, shared_briefings, storage
+from . import audit, forensics, shared_briefings, storage
 from .briefing.claude_brief import generate as generate_briefing
 from .compliance.art26_coord import cluster_summary
 from .ingest.yt_dlp_wrapper import all_demo_videos
@@ -23,9 +23,12 @@ from .models import (
     Briefing,
     BriefingRequest,
     DashboardSummary,
+    ForensicAccountSummary,
+    ForensicProfile,
     HumanReview,
     IngestRequest,
     NarrativeCluster,
+    NarrativeTrendPoint,
     SharedBriefing,
     SharedBriefingUpdate,
 )
@@ -259,6 +262,25 @@ def dashboard() -> DashboardSummary:
         top_threats=top,
         clusters=clusters,
     )
+
+
+@app.get("/forensics/accounts", response_model=list[ForensicAccountSummary])
+def forensic_accounts() -> list[ForensicAccountSummary]:
+    """Public-account summaries computed only from analysed videos in storage."""
+    return forensics.list_accounts(storage.all_videos())
+
+
+@app.get("/forensics/accounts/{handle:path}", response_model=ForensicProfile)
+def forensic_account_profile(handle: str) -> ForensicProfile:
+    profile = forensics.account_profile(storage.all_videos(), handle)
+    if not profile:
+        raise HTTPException(status_code=404, detail=f"handle={handle} not found")
+    return profile
+
+
+@app.get("/forensics/trends", response_model=list[NarrativeTrendPoint])
+def forensic_trends() -> list[NarrativeTrendPoint]:
+    return forensics.narrative_trends(storage.all_videos())
 
 
 @app.post("/briefing", response_model=Briefing)

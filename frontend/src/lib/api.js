@@ -75,6 +75,9 @@ export const api = {
         headers: authHeaders(),
     }).then((r) => j(r)),
     dashboard: () => fetch(`${BASE}/dashboard`).then((r) => j(r)),
+    forensicAccounts: () => fetch(`${BASE}/forensics/accounts`).then((r) => j(r)),
+    forensicProfile: (handle) => fetch(`${BASE}/forensics/accounts/${encodeURIComponent(handle)}`).then((r) => j(r)),
+    forensicTrends: () => fetch(`${BASE}/forensics/trends`).then((r) => j(r)),
     briefing: (opts) => fetch(`${BASE}/briefing`, {
         method: "POST",
         headers: authHeaders({ "content-type": "application/json" }),
