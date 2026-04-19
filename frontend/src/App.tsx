@@ -5,6 +5,7 @@ import { Feed } from "./pages/Feed";
 import { Briefing } from "./pages/Briefing";
 import { LegalBasis } from "./pages/LegalBasis";
 import { Audit } from "./pages/Audit";
+import { Documentation } from "./pages/Documentation";
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
         <Route path="feed" element={<Feed />} />
         <Route path="briefing" element={<Briefing />} />
         <Route path="legal" element={<LegalBasis />} />
+        <Route path="documentation" element={<Documentation />} />
         <Route path="audit" element={<Audit />} />
       </Route>
     </Routes>

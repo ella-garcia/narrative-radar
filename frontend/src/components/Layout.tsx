@@ -1,21 +1,28 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { Logo } from "./Logo";
 
 const NAV = [
   { to: "/", label: "Dashboard" },
   { to: "/feed", label: "Video feed" },
   { to: "/briefing", label: "Briefings" },
-  { to: "/legal", label: "Legal basis" },
   { to: "/audit", label: "Audit log" },
 ];
 
+const DOC_NAV = [
+  { to: "/documentation", label: "Platform Docs" },
+  { to: "/legal", label: "Legal Basis" },
+];
+
 export function Layout() {
+  const location = useLocation();
+  const docsActive = DOC_NAV.some((n) => location.pathname === n.to);
+
   return (
     <div className="min-h-full">
       <header className="border-b border-eu-slate-200 bg-white">
-        <div className="max-w-[1280px] mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-[1280px] mx-auto px-6 min-h-16 py-3 flex flex-wrap items-center justify-between gap-3">
           <Logo />
-          <nav className="flex items-center gap-1">
+          <nav className="flex flex-wrap items-center justify-center gap-1">
             {NAV.map((n) => (
               <NavLink
                 key={n.to}
@@ -32,6 +39,36 @@ export function Layout() {
                 {n.label}
               </NavLink>
             ))}
+            <div className="relative group">
+              <button
+                type="button"
+                aria-haspopup="true"
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
+                  docsActive
+                    ? "bg-eu-blue text-white"
+                    : "text-eu-slate-700 hover:bg-eu-slate-100"
+                }`}
+              >
+                Documentation
+              </button>
+              <div className="absolute right-0 z-20 mt-2 hidden min-w-44 rounded-md border border-eu-slate-200 bg-white p-1 shadow-card group-hover:block group-focus-within:block">
+                {DOC_NAV.map((n) => (
+                  <NavLink
+                    key={n.to}
+                    to={n.to}
+                    className={({ isActive }) =>
+                      `block rounded px-3 py-2 text-sm font-medium transition ${
+                        isActive
+                          ? "bg-eu-blue/10 text-eu-blue"
+                          : "text-eu-slate-700 hover:bg-eu-slate-100"
+                      }`
+                    }
+                  >
+                    {n.label}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
           </nav>
           <div className="flex items-center gap-2 text-xs text-eu-slate-500">
             <div className="hidden md:flex items-center gap-1.5">
