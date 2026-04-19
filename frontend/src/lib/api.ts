@@ -1,10 +1,12 @@
 import type {
   AnalyzedVideo,
+  AgencyInput,
   AuditResponse,
   Briefing,
   DashboardSummary,
   DemoVideo,
   LegalRefs,
+  SharedBriefing,
 } from "./types";
 
 const BASE = "/api";
@@ -121,6 +123,54 @@ export const api = {
         requester_name: opts.requester_name,
       }),
     }).then((r) => j<Briefing>(r)),
+
+  createSharedBriefing: (opts: {
+    video_ids?: string[];
+    constituency?: string;
+    requester_name?: string;
+  }) =>
+    fetch(`${BASE}/briefing/shared`, {
+      method: "POST",
+      headers: authHeaders({ "content-type": "application/json" }),
+      body: JSON.stringify({
+        video_ids: opts.video_ids ?? [],
+        constituency: opts.constituency,
+        requester_name: opts.requester_name,
+      }),
+    }).then((r) => j<SharedBriefing>(r)),
+
+  getSharedBriefing: (id: string) =>
+    fetch(`${BASE}/briefing/shared/${id}`).then((r) => j<SharedBriefing>(r)),
+
+  addSharedBriefingContributor: (
+    id: string,
+    opts: { agency_name: string; contact_label?: string },
+  ) =>
+    fetch(`${BASE}/briefing/shared/${id}/contributors`, {
+      method: "POST",
+      headers: authHeaders({ "content-type": "application/json" }),
+      body: JSON.stringify(opts),
+    }).then((r) => j<SharedBriefing>(r)),
+
+  addSharedBriefingAgencyInput: (
+    id: string,
+    input: Pick<
+      AgencyInput,
+      "agency_id" | "author" | "summary" | "case_details" | "evidence_links" | "evidence_notes"
+    >,
+  ) =>
+    fetch(`${BASE}/briefing/shared/${id}/agency-inputs`, {
+      method: "POST",
+      headers: authHeaders({ "content-type": "application/json", "X-Role": "agency" }),
+      body: JSON.stringify(input),
+    }).then((r) => j<SharedBriefing>(r)),
+
+  updateSharedBriefing: (id: string, briefing: Briefing) =>
+    fetch(`${BASE}/briefing/shared/${id}`, {
+      method: "PATCH",
+      headers: authHeaders({ "content-type": "application/json" }),
+      body: JSON.stringify({ briefing }),
+    }).then((r) => j<SharedBriefing>(r)),
 
   clear: () =>
     fetch(`${BASE}/storage`, {

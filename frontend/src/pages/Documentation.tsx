@@ -32,6 +32,33 @@ const MODALITIES = [
   ["Lineage / reuse", "Shared-audio and derivative-spread signals show whether a narrative is reproduced across posts or languages."],
 ];
 
+const DATA_SOURCING = [
+  {
+    title: "Demo cache first",
+    body: "If a URL matches a pre-cached demo case, the backend returns metadata and transcript fixtures from backend/data without making a network call.",
+  },
+  {
+    title: "Submitted URL metadata",
+    body: "For non-demo URLs, yt-dlp is used narrowly on the single public URL submitted by a user. The prototype does not crawl feeds, search results, or profile histories.",
+  },
+  {
+    title: "Optional media download",
+    body: "Video download is disabled by default and only runs when ENABLE_MEDIA_DOWNLOADS=true. Temporary video, audio, and frame artifacts are cleaned up after processing.",
+  },
+  {
+    title: "Opt-in provider enrichment",
+    body: "YouTube Data API, TikAPI lineage, and optional Hive metadata run only when their API keys and config gates are present. Missing providers fall back safely.",
+  },
+  {
+    title: "DSA Transparency Database",
+    body: "The prototype uses a static DSA TDB-style seed for demo decision-ground aggregates. Production should replace it with a scheduled official dataset sync.",
+  },
+  {
+    title: "Boundary",
+    body: "No bulk scraping, private messages, private user data, account dossiers, or automated watchlist tooling are part of the current design.",
+  },
+];
+
 const MODELS = [
   ["Whisper / WhisperX", "Multilingual transcription with demo fallbacks when live processing is unavailable."],
   ["GPT-4o-mini", "Structured claim extraction from transcript and OCR text."],
@@ -159,6 +186,40 @@ export function Documentation() {
               </p>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="surface p-5">
+        <div className="mb-3">
+          <div className="section-heading">Current prototype data pulling</div>
+          <h2 className="font-serif text-xl font-semibold text-eu-ink">
+            Conservative sourcing, not broad scraping
+          </h2>
+          <p className="mt-1 max-w-4xl text-sm leading-6 text-eu-slate-600">
+            The prototype is designed around explicit URLs, cached demo cases,
+            and opt-in providers. It avoids feed crawling and account monitoring
+            so the evidence trail stays narrow, reproducible, and reviewable.
+          </p>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {DATA_SOURCING.map((source) => (
+            <article key={source.title} className="surface-tight p-4">
+              <h3 className="text-sm font-semibold text-eu-ink">{source.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-eu-slate-600">
+                {source.body}
+              </p>
+            </article>
+          ))}
+        </div>
+        <div className="mt-4 rounded-md border border-eu-blue/20 bg-eu-blue/5 p-4">
+          <div className="mb-1 flex flex-wrap items-center gap-2">
+            <span className="chip bg-white text-eu-blue">Preferred production path</span>
+          </div>
+          <p className="text-sm leading-6 text-eu-slate-700">
+            If an EU-authorized platform-access API becomes available, it should
+            replace best-effort public extraction because it is more reliable,
+            auditable, and legally cleaner.
+          </p>
         </div>
       </section>
 

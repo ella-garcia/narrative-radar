@@ -237,3 +237,56 @@ class Briefing(BaseModel):
     evidence: list[dict]
     disclaimer: str
     briefing_hash: str | None = None  # SHA-256 of canonical content for provenance
+
+
+class AgencyContributorRequest(BaseModel):
+    agency_name: str
+    contact_label: str | None = None
+
+
+class AgencyContributor(BaseModel):
+    agency_id: str
+    agency_name: str
+    contact_label: str | None = None
+    status: Literal["invited", "active", "submitted"] = "invited"
+    invited_at: datetime
+    invited_by: str
+
+
+class AgencyInputRequest(BaseModel):
+    agency_id: str
+    author: str
+    summary: str
+    case_details: str
+    evidence_links: list[str] = Field(default_factory=list)
+    evidence_notes: str = ""
+
+
+class AgencyInput(BaseModel):
+    input_id: str
+    agency_id: str
+    agency_name: str
+    author: str
+    summary: str
+    case_details: str
+    evidence_links: list[str] = Field(default_factory=list)
+    evidence_notes: str = ""
+    created_at: datetime
+    updated_at: datetime
+
+
+class SharedBriefingUpdate(BaseModel):
+    briefing: Briefing
+
+
+class SharedBriefing(BaseModel):
+    briefing_id: str
+    briefing: Briefing
+    source_video_ids: list[str]
+    owner_actor: str
+    constituency: str | None = None
+    status: Literal["draft", "shared", "closed"] = "shared"
+    contributors: list[AgencyContributor] = Field(default_factory=list)
+    agency_inputs: list[AgencyInput] = Field(default_factory=list)
+    created_at: datetime
+    updated_at: datetime

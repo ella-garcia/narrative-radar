@@ -4,12 +4,13 @@ import json
 
 from fastapi.testclient import TestClient
 
-from backend import audit, storage
+from backend import audit, shared_briefings, storage
 from backend.main import app
 
 
 def setup_function(_):
     audit.clear_for_test()
+    shared_briefings.clear_for_test()
     storage.clear()
 
 
@@ -170,3 +171,89 @@ def test_briefing_hash_recorded_in_audit():
     r = client.get("/audit", headers={"X-Role": "dpo"})
     rec = next(x for x in r.json()["records"] if x["action"] == "briefing_generated")
     assert rec["detail"]["briefing_hash"] == b["briefing_hash"]
+
+
+def test_shared_briefing_creation_contributor_and_agency_input_are_audited():
+    client = TestClient(app)
+    client.post(
+        "/ingest",
+        json={"url": "https://www.tiktok.com/@calingeorgescu_official/video/7438219348761239045"},
+        headers={"X-Actor": "alice", "X-Role": "aide"},
+    )
+
+    shared = client.post(
+        "/briefing/shared",
+        json={
+            "video_ids": ["ro-georgescu-001"],
+            "constituency": "RO",
+            "requester_name": "Alice Aide",
+        },
+        headers={"X-Actor": "alice", "X-Role": "aide"},
+    )
+    assert shared.status_code == 200
+    body = shared.json()
+    briefing_id = body["briefing_id"]
+    assert body["briefing"]["briefing_hash"]
+    assert body["source_video_ids"] == ["ro-georgescu-001"]
+    assert body["owner_actor"] == "alice"
+
+    invited = client.post(
+        f"/briefing/shared/{briefing_id}/contributors",
+        json={"agency_name": "EDMO Hub", "contact_label": "analyst@example.eu"},
+        headers={"X-Actor": "alice", "X-Role": "aide"},
+    )
+    assert invited.status_code == 200
+    contributor = invited.json()["contributors"][0]
+    assert contributor["agency_name"] == "EDMO Hub"
+    assert contributor["status"] == "invited"
+
+    submitted = client.post(
+        f"/briefing/shared/{briefing_id}/agency-inputs",
+        json={
+            "agency_id": contributor["agency_id"],
+            "author": "EDMO analyst",
+            "summary": "Additional context from the regional fact-checking hub.",
+            "case_details": "The same narrative appeared in a related monitoring case.",
+            "evidence_links": ["https://example.eu/case"],
+            "evidence_notes": "Link supplied for reviewer follow-up.",
+        },
+        headers={"X-Actor": "edmo", "X-Role": "agency"},
+    )
+    assert submitted.status_code == 200
+    submitted_body = submitted.json()
+    assert submitted_body["contributors"][0]["status"] == "submitted"
+    assert submitted_body["agency_inputs"][0]["agency_name"] == "EDMO Hub"
+    assert submitted_body["agency_inputs"][0]["evidence_links"] == ["https://example.eu/case"]
+
+    fetched = client.get(f"/briefing/shared/{briefing_id}")
+    assert fetched.status_code == 200
+    assert fetched.json()["agency_inputs"][0]["summary"].startswith("Additional context")
+
+    audit_response = client.get("/audit", headers={"X-Role": "dpo"})
+    actions = [record["action"] for record in audit_response.json()["records"]]
+    assert "shared_briefing_created" in actions
+    assert "agency_invited" in actions
+    assert "agency_input_added" in actions
+
+
+def test_shared_briefing_rejects_unauthorized_agency_input():
+    client = TestClient(app)
+    shared = client.post(
+        "/briefing/shared",
+        json={"video_ids": [], "constituency": "RO"},
+        headers={"X-Actor": "alice", "X-Role": "aide"},
+    ).json()
+
+    r = client.post(
+        f"/briefing/shared/{shared['briefing_id']}/agency-inputs",
+        json={
+            "agency_id": "agency_missing",
+            "author": "Unknown",
+            "summary": "Should not be accepted.",
+            "case_details": "",
+            "evidence_links": [],
+            "evidence_notes": "",
+        },
+        headers={"X-Actor": "unknown", "X-Role": "agency"},
+    )
+    assert r.status_code == 403
