@@ -3,13 +3,46 @@
 [![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**AI-powered DSA & AI Act compliance-gap monitoring for parliamentary offices.**
+**AI-enabled platform-accountability auditing for short-form social media content.**
 
-EU AI Hackathon 2026, Topic C — *AI, Disinformation & Democratic Integrity*.
+Built for the **CIVICA EU AI Hackathon 2026**, Topic C — *AI, Disinformation & Democratic Integrity*.
 
 > *We don't tell politicians what to think. We show what platforms aren't doing — and what the law already requires them to do.*
 
 ---
+
+## Hackathon context
+
+Narrative Radar was built over three days, **17–19 April 2026**, during the
+**CIVICA EU AI Hackathon**, a Student Engagement Fund (SEF) project bringing
+together students from **Hertie School**, **IE University**, and **Scoala
+Nationala de Studii Politice si Administrative (SNSPA)**.
+
+The hackathon created a practical space for international and interdisciplinary
+collaboration across policy, technology, and innovation. Teams developed AI
+governance prototypes around three challenge areas:
+
+- public sector infrastructure
+- accountability in automated decision-making
+- democratic integrity
+
+Narrative Radar sits in that third track. The project asks a simple question:
+if platforms already have legal obligations under the **DSA**, the **AI Act**,
+and related EU rules, how do regulators and compliance teams actually inspect
+short-form audio-visual content at scale and spot where those obligations may
+not have been met?
+
+Our answer was to build an AI-enabled auditing tool that analyses public
+short-form video content and automatically cross-references it with:
+
+- independent fact-checking reports
+- EU platform law and legal references
+- platforms' own self-reported moderation decisions
+
+The goal is not to create a new speech regulator or content classifier. The
+goal is to give **regulators, parliamentary offices, and compliance teams**
+better tools to enforce **existing law** and hold platforms accountable using
+traceable, reviewable evidence.
 
 ## What it does
 
@@ -172,6 +205,10 @@ DEMO_SCRIPT.md                   # the 5-minute pitch + judge Q&A prep
 ```
 
 ## Acknowledgements
+
+Thank you to all students who participated in the CIVICA EU AI Hackathon for
+their engagement, creativity, and willingness to work across disciplines on
+pressing public-interest problems.
 
 Built on the work of EDMO and its hub network (CEDMO, GADMO, BENEDMO, NORDIS, IBERIFIER, ADMO, MedDMO, BROD), EUvsDisinfo / EEAS, the Commission's DSA Transparency Database, Funky Citizens, Correctiv, Viginum, Pagella Politica, Demagog, Maldita.es, and AFP Fact Check. We do not represent any of these organisations; we cite their published determinations.
 
